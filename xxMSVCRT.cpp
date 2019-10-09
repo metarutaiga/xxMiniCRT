@@ -1,8 +1,8 @@
 //==============================================================================
-// xxGraphic : MSVCRT minimal Source
+// xxMiniCRT : MSVCRT minimal Source
 //
 // Copyright (c) 2019 TAiGA
-// https://github.com/metarutaiga/xxGraphic
+// https://github.com/metarutaiga/xxMiniCRT
 //==============================================================================
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
