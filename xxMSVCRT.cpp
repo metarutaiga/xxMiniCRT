@@ -4,12 +4,9 @@
 // Copyright (c) 2019 TAiGA
 // https://github.com/metarutaiga/xxMiniCRT
 //==============================================================================
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
 #ifndef _INC_SETJMPEX
 #define _INC_SETJMPEX
 #endif
-#include <Windows.h>
 #include <float.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -21,6 +18,9 @@
 
 #ifndef _DEBUG
 
+#include "xxMSVCRT.h"
+
+#pragma warning(disable:4645)
 #if defined(_M_IX86)
 #pragma comment(lib, "int64")
 #endif
@@ -242,27 +242,6 @@ static void* getFunction(const char* name)
     return nullptr;
 }
 //------------------------------------------------------------------------------
-#if defined(_M_IX86)
-#define FUNCTION(result, function, parameter, ...) \
-static const char* xx ## function ## name = #function; \
-static result (*xx ## function)(__VA_ARGS__); \
-extern "C" __declspec(naked) result function(__VA_ARGS__) \
-{ \
-    __asm lea   ecx, xx ## function \
-    __asm cmp   dword ptr [ecx], 0 \
-    __asm jz    LOAD \
-    __asm RUN: \
-    __asm jmp   dword ptr [ecx] \
-    __asm LOAD: \
-    __asm push  ecx \
-    __asm push  xx ## function ## name \
-    __asm call  getFunction \
-    __asm pop   ecx \
-    __asm pop   ecx \
-    __asm mov   [ecx], eax \
-    __asm jmp   RUN \
-}
-#else
 #define FUNCTION(result, function, parameter, ...) \
 static const char* xx ## function ## name = #function; \
 static result (*xx ## function)(__VA_ARGS__); \
@@ -274,7 +253,6 @@ extern "C" result function(__VA_ARGS__) \
     } \
     return xx ## function ## parameter; \
 }
-#endif
 #pragma function(ceil)
 #pragma function(floor)
 #pragma function(pow)
