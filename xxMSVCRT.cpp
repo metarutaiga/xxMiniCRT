@@ -25,6 +25,7 @@
 #pragma comment(lib, "int64")
 #endif
 #pragma comment(linker, "/nodefaultlib:libcmt.lib")
+#pragma comment(linker, "/nodefaultlib:msvcrt.lib")
 
 //==============================================================================
 //  new / delete
@@ -172,42 +173,37 @@ static void* getFunction(const char* name)
     if (name == "__acrt_iob_func")
     {
         if (__iob == nullptr)
-        {
             (void*&)__iob = getFunction("_iob");
-        }
-        return acrt_iob_func;
+        if (__iob)
+            return acrt_iob_func;
     }
     if (name == "__stdio_common_vfprintf")
     {
         if (__vfprintf == nullptr)
-        {
             (void*&)__vfprintf = getFunction("vfprintf");
-        }
-        return stdio_common_vfprintf;
+        if (__vfprintf)
+            return stdio_common_vfprintf;
     }
     if (name == "__stdio_common_vsprintf")
     {
         if (__vsnprintf == nullptr)
-        {
             (void*&)__vsnprintf = getFunction("_vsnprintf");
-        }
-        return stdio_common_vsprintf;
+        if (__vsnprintf)
+            return stdio_common_vsprintf;
     }
     if (name == "__stdio_common_vsscanf")
     {
         if (__vsnprintf == nullptr)
-        {
             (void*&)__vsscanf = getFunction("vsscanf");
-        }
-        return stdio_common_vsscanf;
+        if (__vsnprintf)
+            return stdio_common_vsscanf;
     }
     if (name == "__libm_sse2_sincosf_")
     {
         if (__sinf == nullptr)
-        {
             (void*&)__sinf = getFunction("sinf");
-        }
-        return libm_sse2_sincosf;
+        if (__sinf)
+            return libm_sse2_sincosf;
     }
 
     if (name == "_aligned_malloc")
@@ -228,15 +224,15 @@ static void* getFunction(const char* name)
 
     static HMODULE user32 = nullptr;
     if (user32 == nullptr)
-    {
         user32 = LoadLibraryA("user32.dll");
-    }
+    if (user32 == nullptr)
+        return nullptr;
 
     static int (WINAPI * MessageBoxA)(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
     if (MessageBoxA == nullptr)
-    {
         (void*&)MessageBoxA = GetProcAddress(user32, "MessageBoxA");
-    }
+    if (MessageBoxA == nullptr)
+        return nullptr;
     MessageBoxA(nullptr, name, "Microsoft Visual C++ Runtime Library", MB_OK);
 
     return nullptr;
