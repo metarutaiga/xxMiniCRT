@@ -239,12 +239,12 @@ static void* getFunction(const char* name)
 }
 //------------------------------------------------------------------------------
 #define FUNCTION(result, function, parameter, ...) \
-static const char* xx ## function ## name = #function; \
-static result (*xx ## function)(__VA_ARGS__); \
 extern "C" result function(__VA_ARGS__) \
 { \
+    static result (*xx ## function)(__VA_ARGS__); \
     if (xx ## function == nullptr) \
     { \
+        static const char* xx ## function ## name = #function; \
         (void*&)xx ## function = getFunction(xx ## function ## name); \
     } \
     return xx ## function ## parameter; \
