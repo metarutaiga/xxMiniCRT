@@ -42,7 +42,6 @@ void operator delete(void* ptr, size_t size)
 //  MSVCRT
 //==============================================================================
 extern "C" int _fltused = 1;
-static HMODULE msvcrt = nullptr;
 //------------------------------------------------------------------------------
 #pragma section(".CRT$XCA", long, read)
 #pragma section(".CRT$XCZ", long, read)
@@ -71,24 +70,11 @@ extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID pr
     switch (reason)
     {
     case DLL_PROCESS_ATTACH:
-        if (msvcrt == nullptr)
-        {
-#if defined(_M_IX86)
-            msvcrt = LoadLibraryA("msvcrt20.dll");
-#else
-            msvcrt = LoadLibraryA("msvcrt.dll");
-#endif
-        }
         _initterm(&__xi_a, &__xi_z);
         _initterm(&__xc_a, &__xc_z);
         break;
 
     case DLL_PROCESS_DETACH:
-        if (msvcrt)
-        {
-            FreeLibrary(msvcrt);
-            msvcrt = nullptr;
-        }
         break;
 
     case DLL_THREAD_ATTACH:
@@ -215,6 +201,18 @@ static void* getFunction(const char* name)
 
     if (name == "setjmp")
         name = "_setjmp";
+
+    static HMODULE msvcrt = nullptr;
+    if (msvcrt == nullptr)
+    {
+#if defined(_M_IX86)
+        msvcrt = LoadLibraryA("msvcrt20.dll");
+#else
+        msvcrt = LoadLibraryA("msvcrt.dll");
+#endif
+    }
+    if (msvcrt == nullptr)
+        return nullptr;
 
     void* function = nullptr;
 
