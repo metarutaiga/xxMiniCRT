@@ -83,37 +83,44 @@ extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID pr
     }
     return TRUE;
 }
-//------------------------------------------------------------------------------
+//==============================================================================
+//  wrapper
+//==============================================================================
 static FILE** __iob;
-static int (*__vfprintf)(FILE*, char const*, va_list);
-static int (*__vsnprintf)(char*, size_t, char const*, va_list);
-static int (*__vsscanf)(char const*, char const*, va_list);
-static float (*__sinf)(float);
-//------------------------------------------------------------------------------
 static FILE* acrt_iob_func(unsigned int i)
 {
     return __iob[i];
 }
 //------------------------------------------------------------------------------
+static int (*__vfprintf)(FILE*, char const*, va_list);
 static int stdio_common_vfprintf(unsigned __int64 options, FILE* stream, char const* format, _locale_t locale, va_list argList)
 {
     return __vfprintf(stream, format, argList);
 }
 //------------------------------------------------------------------------------
+static int (*__vsnprintf)(char*, size_t, char const*, va_list);
 static int stdio_common_vsprintf(unsigned __int64 options, char* buffer, size_t bufferCount, char const* format, _locale_t locale, va_list argList)
 {
     return __vsnprintf(buffer, bufferCount, format, argList);
 }
 //------------------------------------------------------------------------------
+static int (*__vsscanf)(char const*, char const*, va_list);
 static int stdio_common_vsscanf(unsigned __int64 options, char const* buffer, size_t bufferCount, char const* format, _locale_t locale, va_list argList)
 {
     return __vsscanf(buffer, format, argList);
 }
 //------------------------------------------------------------------------------
-static float __fastcall libm_sse2_sincosf(float v)
+#if defined(_M_AMD64)
+static float (*__sinf)(float);
+static float (*__cosf)(float);
+static __m128 __vectorcall libm_sse2_sincosf(float f)
 {
-    return __sinf(v);
+    __m128 v;
+    v.m128_f32[0] = __sinf(f);
+    v.m128_f32[1] = __cosf(f);
+    return v;
 }
+#endif
 //------------------------------------------------------------------------------
 static void* aligned_malloc(size_t size, size_t alignment)
 {
@@ -184,13 +191,17 @@ static void* getFunction(const char* name)
         if (__vsnprintf)
             return stdio_common_vsscanf;
     }
+#if defined(_M_AMD64)
     if (name == "__libm_sse2_sincosf_")
     {
         if (__sinf == nullptr)
             (void*&)__sinf = getFunction("sinf");
-        if (__sinf)
+        if (__cosf == nullptr)
+            (void*&)__cosf = getFunction("cosf");
+        if (__sinf && __cosf)
             return libm_sse2_sincosf;
     }
+#endif
 
     if (name == "_aligned_malloc")
         return aligned_malloc;
@@ -203,20 +214,17 @@ static void* getFunction(const char* name)
         name = "_setjmp";
 
     static HMODULE msvcrt = nullptr;
-    if (msvcrt == nullptr)
-    {
 #if defined(_M_IX86)
+    if (msvcrt == nullptr)
         msvcrt = LoadLibraryA("msvcrt20.dll");
 #else
+    if (msvcrt == nullptr)
         msvcrt = LoadLibraryA("msvcrt.dll");
 #endif
-    }
     if (msvcrt == nullptr)
         return nullptr;
 
-    void* function = nullptr;
-
-    function = GetProcAddress(msvcrt, name);
+    void* function = GetProcAddress(msvcrt, name);
     if (function)
         return function;
 
