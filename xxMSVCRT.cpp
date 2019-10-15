@@ -41,7 +41,7 @@ void operator delete(void* ptr, size_t size)
 //==============================================================================
 //  MSVCRT
 //==============================================================================
-extern "C" int _fltused = 1;
+extern "C" const int _fltused = 1;
 //------------------------------------------------------------------------------
 #pragma section(".CRT$XCA", long, read)
 #pragma section(".CRT$XCZ", long, read)
@@ -250,7 +250,7 @@ extern "C" result function(__VA_ARGS__) \
     static result (*xx ## function)(__VA_ARGS__); \
     if (xx ## function == nullptr) \
     { \
-        static const char* xx ## function ## name = #function; \
+        static const char* const xx ## function ## name = #function; \
         (void*&)xx ## function = getFunction(xx ## function ## name); \
     } \
     return xx ## function ## parameter; \
