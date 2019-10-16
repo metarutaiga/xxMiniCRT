@@ -53,6 +53,7 @@ extern "C" __declspec(allocate(".CRT$XCZ")) const _PVFV __xc_z = 0;
 extern "C" __declspec(allocate(".CRT$XIA")) const _PVFV __xi_a = 0;
 extern "C" __declspec(allocate(".CRT$XIZ")) const _PVFV __xi_z = 0;
 #pragma comment(linker, "/merge:.CRT=.rdata")
+#pragma comment(linker, "/merge:.rdata=.text")
 //------------------------------------------------------------------------------
 static void _initterm(const _PVFV* ppfn, const _PVFV* end)
 {
