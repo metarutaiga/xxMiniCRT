@@ -164,6 +164,9 @@ static void aligned_free(void* ptr)
 //------------------------------------------------------------------------------
 static void* getFunction(const char* name)
 {
+    if (name == nullptr)
+        return nullptr;
+
     if (name == "__acrt_iob_func")
     {
         if (__iob == nullptr)
