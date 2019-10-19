@@ -25,7 +25,9 @@
 #pragma comment(lib, "int64")
 #endif
 #pragma comment(linker, "/nodefaultlib:libcmt.lib")
+#pragma comment(linker, "/nodefaultlib:libcpmt.lib")
 #pragma comment(linker, "/nodefaultlib:msvcrt.lib")
+#pragma comment(linker, "/nodefaultlib:msvcprt.lib")
 
 //==============================================================================
 //  new / delete
@@ -34,7 +36,20 @@ void* operator new(size_t size)
 {
     return _aligned_malloc(size, 16);
 }
+void* operator new[](size_t size)
+{
+    return _aligned_malloc(size, 16);
+}
+//------------------------------------------------------------------------------
 void operator delete(void* ptr, size_t size)
+{
+    _aligned_free(ptr);
+}
+void operator delete[](void* ptr)
+{
+    _aligned_free(ptr);
+}
+void operator delete[](void* ptr, size_t size)
 {
     _aligned_free(ptr);
 }
@@ -360,6 +375,22 @@ extern "C" __declspec(naked) void* _ftol2()
 }
 //------------------------------------------------------------------------------
 extern "C" __declspec(naked) void* _ftol2_sse()
+{
+    __asm sub       esp, 12
+    __asm fnstcw    [esp]
+    __asm mov       ax, [esp]
+    __asm or        ax, 0C00h
+    __asm mov       [esp + 2], ax
+    __asm fldcw     [esp + 2]
+    __asm fistp     qword ptr [esp + 4]
+    __asm fldcw     [esp]
+    __asm pop       eax
+    __asm pop       eax
+    __asm pop       edx
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) void* _ftol2_sse_excpt()
 {
     __asm sub       esp, 12
     __asm fnstcw    [esp]
