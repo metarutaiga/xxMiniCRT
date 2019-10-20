@@ -129,14 +129,71 @@ static int stdio_common_vsscanf(unsigned __int64 options, char const* buffer, si
 #if defined(_M_AMD64)
 static float (*__sinf)(float);
 static float (*__cosf)(float);
+static float (*__acosf)(float);
+static float (*__powf)(float, float);
+#endif
+static double (*__sin)(double);
+static double (*__cos)(double);
+static double (*__acos)(double);
+static double (*__pow)(double, double);
+static __m128 __vectorcall libm_sse2_sinf(float f)
+{
+    __m128 v;
+#if defined(_M_AMD64)
+    v.m128_f32[0] = __sinf(f);
+#else
+    v.m128_f32[0] = __sin(f);
+#endif
+    return v;
+}
+static __m128 __vectorcall libm_sse2_cosf(float f)
+{
+    __m128 v;
+#if defined(_M_AMD64)
+    v.m128_f32[0] = __cosf(f);
+#else
+    v.m128_f32[0] = __cos(f);
+#endif
+    return v;
+}
 static __m128 __vectorcall libm_sse2_sincosf(float f)
 {
     __m128 v;
+#if defined(_M_AMD64)
     v.m128_f32[0] = __sinf(f);
     v.m128_f32[1] = __cosf(f);
+#else
+    v.m128_f32[0] = __sin(f);
+    v.m128_f32[1] = __cos(f);
+#endif
     return v;
 }
+static __m128 __vectorcall libm_sse2_acosf(float f)
+{
+    __m128 v;
+#if defined(_M_AMD64)
+    v.m128_f32[0] = __acosf(f);
+#else
+    v.m128_f32[0] = __acos(f);
 #endif
+    return v;
+}
+static __m128d __vectorcall libm_sse2_pow(float a, double b)
+{
+    __m128d v;
+    v.m128d_f64[0] = __pow(a, b);
+    return v;
+}
+static __m128 __vectorcall libm_sse2_powf(float a, float b)
+{
+    __m128 v;
+#if defined(_M_AMD64)
+    v.m128_f32[0] = __powf(a, b);
+#else
+    v.m128_f32[0] = __pow(a, b);
+#endif
+    return v;
+}
 //------------------------------------------------------------------------------
 static void* aligned_malloc(size_t size, size_t alignment)
 {
@@ -210,17 +267,88 @@ static void* getFunction(const char* name)
         if (__vsnprintf)
             return stdio_common_vsscanf;
     }
+
+    if (name == "__libm_sse2_sinf")
+    {
 #if defined(_M_AMD64)
+        if (__sinf == nullptr)
+            (void*&)__sinf = getFunction("sinf");
+        if (__sinf)
+            return libm_sse2_sinf;
+#else
+        if (__sin == nullptr)
+            (void*&)__sin = getFunction("sin");
+        if (__sin)
+            return libm_sse2_sinf;
+#endif
+    }
+    if (name == "__libm_sse2_cosf")
+    {
+#if defined(_M_AMD64)
+        if (__cosf == nullptr)
+            (void*&)__cosf = getFunction("cosf");
+        if (__cosf)
+            return libm_sse2_cosf;
+#else
+        if (__cos == nullptr)
+            (void*&)__cos = getFunction("cos");
+        if (__cos)
+            return libm_sse2_cosf;
+#endif
+    }
     if (name == "__libm_sse2_sincosf_")
     {
+#if defined(_M_AMD64)
         if (__sinf == nullptr)
             (void*&)__sinf = getFunction("sinf");
         if (__cosf == nullptr)
             (void*&)__cosf = getFunction("cosf");
         if (__sinf && __cosf)
             return libm_sse2_sincosf;
-    }
+#else
+        if (__sin == nullptr)
+            (void*&)__sin = getFunction("sin");
+        if (__cos == nullptr)
+            (void*&)__cos = getFunction("cos");
+        if (__sin && __cos)
+            return libm_sse2_sincosf;
 #endif
+    }
+    if (name == "__libm_sse2_acosf")
+    {
+#if defined(_M_AMD64)
+        if (__acosf == nullptr)
+            (void*&)__acosf = getFunction("acosf");
+        if (__acosf)
+            return libm_sse2_acosf;
+#else
+        if (__acos == nullptr)
+            (void*&)__acos = getFunction("acos");
+        if (__acos)
+            return libm_sse2_acosf;
+#endif
+    }
+    if (name == "__libm_sse2_pow")
+    {
+        if (__pow == nullptr)
+            (void*&)__pow = getFunction("pow");
+        if (__pow)
+            return libm_sse2_pow;
+    }
+    if (name == "__libm_sse2_powf")
+    {
+#if defined(_M_AMD64)
+        if (__powf == nullptr)
+            (void*&)__powf = getFunction("powf");
+        if (__powf)
+            return libm_sse2_powf;
+#else
+        if (__pow == nullptr)
+            (void*&)__pow = getFunction("pow");
+        if (__pow)
+            return libm_sse2_powf;
+#endif
+    }
 
     if (name == "_aligned_malloc")
         return aligned_malloc;
@@ -341,7 +469,12 @@ FUNCTION(FILE*,         _wfopen,                    (a, b),             wchar_t 
 FUNCTION(void,          _CIfmod,                    ());
 FUNCTION(void,          _CIacos,                    ());
 FUNCTION(void,          _CIpow,                     ());
+FUNCTION(void,          __libm_sse2_sinf,           ());
+FUNCTION(void,          __libm_sse2_cosf,           ());
 FUNCTION(void,          __libm_sse2_sincosf_,       ());
+FUNCTION(void,          __libm_sse2_acosf,          ());
+FUNCTION(void,          __libm_sse2_pow,            ());
+FUNCTION(void,          __libm_sse2_powf,           ());
 FUNCTION(FILE*,         __acrt_iob_func,            (a),                unsigned a);
 FUNCTION(int,           __stdio_common_vfprintf,    (a, b, c, d, e),    unsigned __int64 a, FILE* b, char const* c, _locale_t d, va_list e);
 FUNCTION(int,           __stdio_common_vsprintf,    (a, b, c, d, e, f), unsigned __int64 a, char* b, size_t c, char const* d, _locale_t e, va_list f);
@@ -358,7 +491,7 @@ extern "C" __declspec(naked) void _chkstk()
     __asm ret
 }
 //------------------------------------------------------------------------------
-extern "C" __declspec(naked) void* _ftol2()
+extern "C" __declspec(naked) long long _ftol2(float f)
 {
     __asm sub       esp, 12
     __asm fnstcw    [esp]
@@ -374,7 +507,7 @@ extern "C" __declspec(naked) void* _ftol2()
     __asm ret
 }
 //------------------------------------------------------------------------------
-extern "C" __declspec(naked) void* _ftol2_sse()
+extern "C" __declspec(naked) long long _ftol2_sse(float f)
 {
     __asm sub       esp, 12
     __asm fnstcw    [esp]
@@ -390,7 +523,7 @@ extern "C" __declspec(naked) void* _ftol2_sse()
     __asm ret
 }
 //------------------------------------------------------------------------------
-extern "C" __declspec(naked) void* _ftol2_sse_excpt()
+extern "C" __declspec(naked) long long _ftol2_sse_excpt(float f)
 {
     __asm sub       esp, 12
     __asm fnstcw    [esp]
@@ -403,6 +536,104 @@ extern "C" __declspec(naked) void* _ftol2_sse_excpt()
     __asm pop       eax
     __asm pop       eax
     __asm pop       edx
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) long long _ftol3(float f)
+{
+    __asm cvttss2si eax, xmm0
+    __asm cdq
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) unsigned int _ftoui3(float f)
+{
+    __asm cvttss2si eax, xmm0
+    __asm test      eax, 080000000h
+    __asm jnz       _ftoui3_neg
+    __asm ret
+    __asm _ftoui3_neg:
+    __asm xor       eax, eax
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) unsigned long long _ftoul3(float f)
+{
+    __asm cvttss2si eax, xmm0
+    __asm test      eax, 080000000h
+    __asm jnz       _ftoul3_neg
+    __asm cdq
+    __asm ret
+    __asm _ftoul3_neg:
+    __asm xor       eax, eax
+    __asm xor       edx, edx
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) long long _dtol3(double d)
+{
+    static const double trick = { 6755399441055744.0 };
+
+    __asm sub       esp, 8
+    __asm movsd     xmm1, trick
+    __asm addsd     xmm0, xmm1
+    __asm psubq     xmm0, xmm1
+    __asm movq      qword ptr [esp], xmm0
+    __asm pop       eax
+    __asm pop       edx
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) unsigned int _dtoui3(double d)
+{
+    __asm cvttsd2si eax, xmm0
+    __asm test      eax, 080000000h
+    __asm jnz       _dtoui3_neg
+    __asm ret
+    __asm _dtoui3_neg:
+    __asm xor       eax, eax
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) unsigned long long _dtoul3(double d)
+{
+    static const double trick = { 4503599627370496.0 };
+
+    __asm sub       esp, 8
+    __asm movsd     xmm1, trick
+    __asm addsd     xmm0, xmm1
+    __asm pxor      xmm0, xmm1
+    __asm movq      qword ptr [esp], xmm0
+    __asm pop       eax
+    __asm pop       edx
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) double _ltod3(long long l)
+{
+    static const double Int32ToUInt32[] = { 0.0, 4294967296.0 };
+
+    __asm cvtsi2sd  xmm0, ecx
+    __asm shr       ecx, 31
+    __asm cvtsi2sd  xmm1, edx
+    __asm addsd     xmm0, Int32ToUInt32[ecx * 8]
+    __asm mulsd     xmm1, Int32ToUInt32[8]
+    __asm addsd     xmm0, xmm1
+    __asm ret
+}
+//------------------------------------------------------------------------------
+extern "C" __declspec(naked) double _ultod3(unsigned long long l)
+{
+    static const double Int32ToUInt32[] = { 0.0, 4294967296.0 };
+
+    __asm cvtsi2sd  xmm0, ecx
+    __asm shr       ecx, 31
+    __asm cvtsi2sd  xmm1, edx
+    __asm shr       edx, 31
+    __asm addsd     xmm0, Int32ToUInt32[ecx * 8]
+    __asm addsd     xmm1, Int32ToUInt32[edx * 8]
+    __asm mulsd     xmm1, Int32ToUInt32[8]
+    __asm addsd     xmm0, xmm1
     __asm ret
 }
 //------------------------------------------------------------------------------
