@@ -6,7 +6,7 @@
 //==============================================================================
 #pragma once
 
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(__llvm__)
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -24,7 +24,9 @@ extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID pr
 #define IMPLEMENT_MINICRT() \
 IMPLEMENT_MINICRT_LIB() \
 __pragma(comment(linker, "/nodefaultlib:libcmt.lib")) \
+__pragma(comment(linker, "/nodefaultlib:libcpmt.lib")) \
 __pragma(comment(linker, "/nodefaultlib:msvcrt.lib")) \
+__pragma(comment(linker, "/nodefaultlib:msvcprt.lib")) \
 extern "C" int wWinMainCRTStartup() \
 { \
     _DllMainCRTStartup(NULL, DLL_PROCESS_ATTACH, NULL); \

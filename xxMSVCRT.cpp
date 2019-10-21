@@ -16,13 +16,13 @@
 #include <malloc.h>
 #include <math.h>
 
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(__llvm__)
 
 #include "xxMSVCRT.h"
 
 #pragma warning(disable:4645)
 #if defined(_M_IX86)
-#pragma comment(lib, "int64")
+#   pragma comment(lib, "int64")
 #endif
 #pragma comment(linker, "/nodefaultlib:libcmt.lib")
 #pragma comment(linker, "/nodefaultlib:libcpmt.lib")
@@ -139,58 +139,104 @@ static double (*__pow)(double, double);
 static __m128 __vectorcall libm_sse2_sinf(float f)
 {
     __m128 v;
-#if defined(_M_AMD64)
-    v.m128_f32[0] = __sinf(f);
+#if defined(__llvm__)
+#   if defined(_M_AMD64)
+    v[0] = __sinf(f);
+#   else
+    v[0] = __sin(f);
+#   endif
 #else
+#   if defined(_M_AMD64)
+    v.m128_f32[0] = __sinf(f);
+#   else
     v.m128_f32[0] = __sin(f);
+#   endif
 #endif
     return v;
 }
 static __m128 __vectorcall libm_sse2_cosf(float f)
 {
     __m128 v;
-#if defined(_M_AMD64)
-    v.m128_f32[0] = __cosf(f);
+#if defined(__llvm__)
+#   if defined(_M_AMD64)
+    v[0] = __cosf(f);
+#   else
+    v[0] = __cos(f);
+#   endif
 #else
+#   if defined(_M_AMD64)
+    v.m128_f32[0] = __cosf(f);
+#   else
     v.m128_f32[0] = __cos(f);
+#   endif
 #endif
     return v;
 }
 static __m128 __vectorcall libm_sse2_sincosf(float f)
 {
     __m128 v;
-#if defined(_M_AMD64)
+#if defined(__llvm__)
+#   if defined(_M_AMD64)
+    v[0] = __sinf(f);
+    v[1] = __cosf(f);
+#   else
+    v[0] = __sin(f);
+    v[1] = __cos(f);
+#   endif
+#else
+#   if defined(_M_AMD64)
     v.m128_f32[0] = __sinf(f);
     v.m128_f32[1] = __cosf(f);
-#else
+#   else
     v.m128_f32[0] = __sin(f);
     v.m128_f32[1] = __cos(f);
+#   endif
 #endif
     return v;
 }
 static __m128 __vectorcall libm_sse2_acosf(float f)
 {
     __m128 v;
-#if defined(_M_AMD64)
-    v.m128_f32[0] = __acosf(f);
+#if defined(__llvm__)
+#   if defined(_M_AMD64)
+    v[0] = __acosf(f);
+#   else
+    v[0] = __acos(f);
+#   endif
 #else
+#   if defined(_M_AMD64)
+    v.m128_f32[0] = __acosf(f);
+#   else
     v.m128_f32[0] = __acos(f);
+#   endif
 #endif
     return v;
 }
 static __m128d __vectorcall libm_sse2_pow(float a, double b)
 {
     __m128d v;
+#if defined(__llvm__)
+    v[0] = __pow(a, b);
+#else
     v.m128d_f64[0] = __pow(a, b);
+#endif
     return v;
 }
 static __m128 __vectorcall libm_sse2_powf(float a, float b)
 {
     __m128 v;
-#if defined(_M_AMD64)
-    v.m128_f32[0] = __powf(a, b);
+#if defined(__llvm__)
+#   if defined(_M_AMD64)
+    v[0] = __powf(a, b);
+#   else
+    v[0] = __pow(a, b);
+#   endif
 #else
+#   if defined(_M_AMD64)
+    v.m128_f32[0] = __powf(a, b);
+#   else
     v.m128_f32[0] = __pow(a, b);
+#   endif
 #endif
     return v;
 }
@@ -400,11 +446,16 @@ extern "C" result function(__VA_ARGS__) \
         static const char* const xx ## function ## name = #function; \
         (void*&)xx ## function = getFunction(xx ## function ## name); \
     } \
-    return xx ## function ## parameter; \
+    return xx ## function parameter; \
 }
+#pragma function(acos)
+#pragma function(atan2)
 #pragma function(ceil)
+#pragma function(cos)
 #pragma function(floor)
+#pragma function(fmod)
 #pragma function(pow)
+#pragma function(sin)
 #if defined(_M_AMD64)
 #pragma function(asinf)
 #pragma function(acosf)
@@ -419,12 +470,20 @@ extern "C" result function(__VA_ARGS__) \
 #pragma function(memcpy)
 #pragma function(memmove)
 #pragma function(memset)
+#pragma function(strcat)
 #pragma function(strcmp)
+#pragma function(strcpy)
+#pragma function(strlen)
 FUNCTION(int,           atexit,                     (a),                void (*a)(void));
+FUNCTION(double,        acos,                       (a),                double a);
+FUNCTION(double,        atan2,                      (a, b),             double a, double b);
 FUNCTION(double,        atof,                       (a),                char const* a);
 FUNCTION(double,        ceil,                       (a),                double a);
+FUNCTION(double,        cos,                        (a),                double a);
 FUNCTION(double,        floor,                      (a),                double a);
+FUNCTION(double,        fmod,                       (a, b),             double a, double b);
 FUNCTION(double,        pow,                        (a, b),             double a, double b);
+FUNCTION(double,        sin,                        (a),                double a);
 #if defined(_M_AMD64)
 FUNCTION(float,         asinf,                      (a),                float a);
 FUNCTION(float,         acosf,                      (a),                float a);
@@ -457,8 +516,11 @@ FUNCTION(int,           memcmp,                     (a, b, c),          void con
 FUNCTION(void*,         memcpy,                     (a, b, c),          void* a, void const* b, size_t c);
 FUNCTION(void*,         memmove,                    (a, b, c),          void* a, void const* b, size_t c);
 FUNCTION(void*,         memset,                     (a, b, c),          void* a, int b, size_t c);
+FUNCTION(char*,         strcat,                     (a, b),             char* a, char const* b);
 FUNCTION(char const*,   strchr,                     (a, b),             char const* a, int b);
 FUNCTION(int,           strcmp,                     (a, b),             char const* a, char const* b);
+FUNCTION(char*,         strcpy,                     (a, b),             char* a, char const* b);
+FUNCTION(size_t,        strlen,                     (a),                char const* a);
 FUNCTION(int,           strncmp,                    (a, b, c),          char const* a, char const* b, size_t c);
 FUNCTION(char*,         strncpy,                    (a, b, c),          char* a, char const* b, size_t c);
 FUNCTION(char const*,   strrchr,                    (a, b),             char const* a, int b);
@@ -469,10 +531,10 @@ FUNCTION(FILE*,         _wfopen,                    (a, b),             wchar_t 
 FUNCTION(void,          _CIfmod,                    ());
 FUNCTION(void,          _CIacos,                    ());
 FUNCTION(void,          _CIpow,                     ());
-FUNCTION(void,          __libm_sse2_sinf,           ());
-FUNCTION(void,          __libm_sse2_cosf,           ());
-FUNCTION(void,          __libm_sse2_sincosf_,       ());
 FUNCTION(void,          __libm_sse2_acosf,          ());
+FUNCTION(void,          __libm_sse2_cosf,           ());
+FUNCTION(void,          __libm_sse2_sinf,           ());
+FUNCTION(void,          __libm_sse2_sincosf_,       ());
 FUNCTION(void,          __libm_sse2_pow,            ());
 FUNCTION(void,          __libm_sse2_powf,           ());
 FUNCTION(FILE*,         __acrt_iob_func,            (a),                unsigned a);
@@ -481,6 +543,12 @@ FUNCTION(int,           __stdio_common_vsprintf,    (a, b, c, d, e, f), unsigned
 FUNCTION(int,           __stdio_common_vsscanf,     (a, b, c, d, e, f), unsigned __int64 a, char const* b, size_t c, char const* d, _locale_t e, va_list f);
 //------------------------------------------------------------------------------
 #if defined(_M_IX86)
+//------------------------------------------------------------------------------
+extern "C" static const double TrickDouble = { 6755399441055744.0 };
+extern "C" static const double _TrickDouble = { 6755399441055744.0 };
+extern "C" static const double Int32ToUInt32[] = { 0.0, 4294967296.0 }; 
+extern "C" static const double _Int32ToUInt32[] = { 0.0, 4294967296.0 };
+//------------------------------------------------------------------------------
 extern "C" __declspec(naked) void _chkstk()
 {
     __asm neg       eax
@@ -572,10 +640,8 @@ extern "C" __declspec(naked) unsigned long long _ftoul3(float f)
 //------------------------------------------------------------------------------
 extern "C" __declspec(naked) long long _dtol3(double d)
 {
-    static const double trick = { 6755399441055744.0 };
-
     __asm sub       esp, 8
-    __asm movsd     xmm1, trick
+    __asm movsd     xmm1, _TrickDouble
     __asm addsd     xmm0, xmm1
     __asm psubq     xmm0, xmm1
     __asm movq      qword ptr [esp], xmm0
@@ -597,10 +663,8 @@ extern "C" __declspec(naked) unsigned int _dtoui3(double d)
 //------------------------------------------------------------------------------
 extern "C" __declspec(naked) unsigned long long _dtoul3(double d)
 {
-    static const double trick = { 4503599627370496.0 };
-
     __asm sub       esp, 8
-    __asm movsd     xmm1, trick
+    __asm movsd     xmm1, _TrickDouble
     __asm addsd     xmm0, xmm1
     __asm pxor      xmm0, xmm1
     __asm movq      qword ptr [esp], xmm0
@@ -611,28 +675,24 @@ extern "C" __declspec(naked) unsigned long long _dtoul3(double d)
 //------------------------------------------------------------------------------
 extern "C" __declspec(naked) double _ltod3(long long l)
 {
-    static const double Int32ToUInt32[] = { 0.0, 4294967296.0 };
-
     __asm cvtsi2sd  xmm0, ecx
     __asm shr       ecx, 31
     __asm cvtsi2sd  xmm1, edx
-    __asm addsd     xmm0, Int32ToUInt32[ecx * 8]
-    __asm mulsd     xmm1, Int32ToUInt32[8]
+    __asm addsd     xmm0, _Int32ToUInt32[ecx * 8]
+    __asm mulsd     xmm1, _Int32ToUInt32[8]
     __asm addsd     xmm0, xmm1
     __asm ret
 }
 //------------------------------------------------------------------------------
 extern "C" __declspec(naked) double _ultod3(unsigned long long l)
 {
-    static const double Int32ToUInt32[] = { 0.0, 4294967296.0 };
-
     __asm cvtsi2sd  xmm0, ecx
     __asm shr       ecx, 31
     __asm cvtsi2sd  xmm1, edx
     __asm shr       edx, 31
-    __asm addsd     xmm0, Int32ToUInt32[ecx * 8]
-    __asm addsd     xmm1, Int32ToUInt32[edx * 8]
-    __asm mulsd     xmm1, Int32ToUInt32[8]
+    __asm addsd     xmm0, _Int32ToUInt32[ecx * 8]
+    __asm addsd     xmm1, _Int32ToUInt32[edx * 8]
+    __asm mulsd     xmm1, _Int32ToUInt32[8]
     __asm addsd     xmm0, xmm1
     __asm ret
 }
