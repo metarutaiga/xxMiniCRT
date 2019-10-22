@@ -285,134 +285,14 @@ static void* getFunction(const char* name)
     if (name == nullptr)
         return nullptr;
 
-    if (name == "__acrt_iob_func")
-    {
-        if (__iob == nullptr)
-            (void*&)__iob = getFunction("_iob");
-        if (__iob)
-            return acrt_iob_func;
-    }
-    if (name == "__stdio_common_vfprintf")
-    {
-        if (__vfprintf == nullptr)
-            (void*&)__vfprintf = getFunction("vfprintf");
-        if (__vfprintf)
-            return stdio_common_vfprintf;
-    }
-    if (name == "__stdio_common_vsprintf")
-    {
-        if (__vsnprintf == nullptr)
-            (void*&)__vsnprintf = getFunction("_vsnprintf");
-        if (__vsnprintf)
-            return stdio_common_vsprintf;
-    }
-    if (name == "__stdio_common_vsscanf")
-    {
-        if (__vsnprintf == nullptr)
-            (void*&)__vsscanf = getFunction("vsscanf");
-        if (__vsnprintf)
-            return stdio_common_vsscanf;
-    }
-
-    if (name == "__libm_sse2_sinf")
-    {
-#if defined(_M_AMD64)
-        if (__sinf == nullptr)
-            (void*&)__sinf = getFunction("sinf");
-        if (__sinf)
-            return libm_sse2_sinf;
-#else
-        if (__sin == nullptr)
-            (void*&)__sin = getFunction("sin");
-        if (__sin)
-            return libm_sse2_sinf;
-#endif
-    }
-    if (name == "__libm_sse2_cosf")
-    {
-#if defined(_M_AMD64)
-        if (__cosf == nullptr)
-            (void*&)__cosf = getFunction("cosf");
-        if (__cosf)
-            return libm_sse2_cosf;
-#else
-        if (__cos == nullptr)
-            (void*&)__cos = getFunction("cos");
-        if (__cos)
-            return libm_sse2_cosf;
-#endif
-    }
-    if (name == "__libm_sse2_sincosf_")
-    {
-#if defined(_M_AMD64)
-        if (__sinf == nullptr)
-            (void*&)__sinf = getFunction("sinf");
-        if (__cosf == nullptr)
-            (void*&)__cosf = getFunction("cosf");
-        if (__sinf && __cosf)
-            return libm_sse2_sincosf;
-#else
-        if (__sin == nullptr)
-            (void*&)__sin = getFunction("sin");
-        if (__cos == nullptr)
-            (void*&)__cos = getFunction("cos");
-        if (__sin && __cos)
-            return libm_sse2_sincosf;
-#endif
-    }
-    if (name == "__libm_sse2_acosf")
-    {
-#if defined(_M_AMD64)
-        if (__acosf == nullptr)
-            (void*&)__acosf = getFunction("acosf");
-        if (__acosf)
-            return libm_sse2_acosf;
-#else
-        if (__acos == nullptr)
-            (void*&)__acos = getFunction("acos");
-        if (__acos)
-            return libm_sse2_acosf;
-#endif
-    }
-    if (name == "__libm_sse2_pow")
-    {
-        if (__pow == nullptr)
-            (void*&)__pow = getFunction("pow");
-        if (__pow)
-            return libm_sse2_pow;
-    }
-    if (name == "__libm_sse2_powf")
-    {
-#if defined(_M_AMD64)
-        if (__powf == nullptr)
-            (void*&)__powf = getFunction("powf");
-        if (__powf)
-            return libm_sse2_powf;
-#else
-        if (__pow == nullptr)
-            (void*&)__pow = getFunction("pow");
-        if (__pow)
-            return libm_sse2_powf;
-#endif
-    }
-
-    if (name == "_aligned_malloc")
-        return aligned_malloc;
-    if (name == "_aligned_realloc")
-        return aligned_realloc;
-    if (name == "_aligned_free")
-        return aligned_free;
-
-    if (name == "setjmp")
-        name = "_setjmp";
-
     static HMODULE msvcrt = nullptr;
-#if defined(_M_IX86)
-    if (msvcrt == nullptr)
-        msvcrt = LoadLibraryA("msvcrt20.dll");
-#else
     if (msvcrt == nullptr)
         msvcrt = LoadLibraryA("msvcrt.dll");
+#if defined(_M_IX86) && 0
+    if (msvcrt == nullptr)
+        msvcrt = LoadLibraryA("msvcrt40.dll");
+    if (msvcrt == nullptr)
+        msvcrt = LoadLibraryA("msvcrt20.dll");
 #endif
     if (msvcrt == nullptr)
         return nullptr;
@@ -420,6 +300,15 @@ static void* getFunction(const char* name)
     void* function = GetProcAddress(msvcrt, name);
     if (function)
         return function;
+
+#if defined(_M_IX86)
+    if (name == "_aligned_malloc")
+        return aligned_malloc;
+    if (name == "_aligned_realloc")
+        return aligned_realloc;
+    if (name == "_aligned_free")
+        return aligned_free;
+#endif
 
     static HMODULE user32 = nullptr;
     if (user32 == nullptr)
@@ -437,6 +326,150 @@ static void* getFunction(const char* name)
     return nullptr;
 }
 //------------------------------------------------------------------------------
+static void* getFunction__acrt_iob_func()
+{
+    if (__iob == nullptr)
+        (void*&)__iob = getFunction("_iob");
+    if (__iob)
+        return acrt_iob_func;
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__libm_sse2_sinf()
+{
+#if defined(_M_AMD64)
+    if (__sinf == nullptr)
+        (void*&)__sinf = getFunction("sinf");
+    if (__sinf)
+        return libm_sse2_sinf;
+#else
+    if (__sin == nullptr)
+        (void*&)__sin = getFunction("sin");
+    if (__sin)
+        return libm_sse2_sinf;
+#endif
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__libm_sse2_cosf()
+{
+#if defined(_M_AMD64)
+    if (__cosf == nullptr)
+        (void*&)__cosf = getFunction("cosf");
+    if (__cosf)
+        return libm_sse2_cosf;
+#else
+    if (__cos == nullptr)
+        (void*&)__cos = getFunction("cos");
+    if (__cos)
+        return libm_sse2_cosf;
+#endif
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__libm_sse2_sincosf_()
+{
+#if defined(_M_AMD64)
+    if (__sinf == nullptr)
+        (void*&)__sinf = getFunction("sinf");
+    if (__cosf == nullptr)
+        (void*&)__cosf = getFunction("cosf");
+    if (__sinf && __cosf)
+        return libm_sse2_sincosf;
+#else
+    if (__sin == nullptr)
+        (void*&)__sin = getFunction("sin");
+    if (__cos == nullptr)
+        (void*&)__cos = getFunction("cos");
+    if (__sin && __cos)
+        return libm_sse2_sincosf;
+#endif
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__libm_sse2_acosf()
+{
+#if defined(_M_AMD64)
+    if (__acosf == nullptr)
+        (void*&)__acosf = getFunction("acosf");
+    if (__acosf)
+        return libm_sse2_acosf;
+#else
+    if (__acos == nullptr)
+        (void*&)__acos = getFunction("acos");
+    if (__acos)
+        return libm_sse2_acosf;
+#endif
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__libm_sse2_pow()
+{
+    if (__pow == nullptr)
+        (void*&)__pow = getFunction("pow");
+    if (__pow)
+        return libm_sse2_pow;
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__libm_sse2_powf()
+{
+#if defined(_M_AMD64)
+    if (__powf == nullptr)
+        (void*&)__powf = getFunction("powf");
+    if (__powf)
+        return libm_sse2_powf;
+#else
+    if (__pow == nullptr)
+        (void*&)__pow = getFunction("pow");
+    if (__pow)
+        return libm_sse2_powf;
+#endif
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunctionsetjmp()
+{
+    return getFunction("_setjmp");
+}
+//------------------------------------------------------------------------------
+static void* getFunction__stdio_common_vfprintf()
+{
+    if (__vfprintf == nullptr)
+        (void*&)__vfprintf = getFunction("vfprintf");
+    if (__vfprintf)
+        return stdio_common_vfprintf;
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__stdio_common_vsprintf()
+{
+    if (__vsnprintf == nullptr)
+        (void*&)__vsnprintf = getFunction("_vsnprintf");
+    if (__vsnprintf)
+        return stdio_common_vsprintf;
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction__stdio_common_vsscanf()
+{
+    if (__vsnprintf == nullptr)
+        (void*&)__vsscanf = getFunction("vsscanf");
+    if (__vsnprintf)
+        return stdio_common_vsscanf;
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
 #define FUNCTION(result, function, parameter, ...) \
 extern "C" result function(__VA_ARGS__) \
 { \
@@ -448,6 +481,18 @@ extern "C" result function(__VA_ARGS__) \
     } \
     return xx ## function parameter; \
 }
+//------------------------------------------------------------------------------
+#define FUNCTION1(result, function, parameter, ...) \
+extern "C" result function(__VA_ARGS__) \
+{ \
+    static result (*xx ## function)(__VA_ARGS__); \
+    if (xx ## function == nullptr) \
+    { \
+        (void*&)xx ## function = getFunction ## function(); \
+    } \
+    return xx ## function parameter; \
+}
+//------------------------------------------------------------------------------
 #pragma function(acos)
 #pragma function(atan2)
 #pragma function(ceil)
@@ -510,7 +555,7 @@ FUNCTION(size_t,        fwrite,                     (a, b, c, d),       void con
 FUNCTION(char*,         getenv,                     (a),                char const* a);
 FUNCTION(void,          qsort,                      (a, b, c, d),       void* a, size_t b, size_t c, _CoreCrtNonSecureSearchSortCompareFunction d);
 FUNCTION(void,          longjmp,                    (a, b),             jmp_buf a, int b);
-FUNCTION(int,           setjmp,                     (a),                jmp_buf a);
+FUNCTION1(int,          setjmp,                     (a),                jmp_buf a);
 FUNCTION(void const*,   memchr,                     (a, b, c),          void const* a, int b, size_t c);
 FUNCTION(int,           memcmp,                     (a, b, c),          void const* a, void const* b, size_t c);
 FUNCTION(void*,         memcpy,                     (a, b, c),          void* a, void const* b, size_t c);
@@ -531,16 +576,16 @@ FUNCTION(FILE*,         _wfopen,                    (a, b),             wchar_t 
 FUNCTION(void,          _CIfmod,                    ());
 FUNCTION(void,          _CIacos,                    ());
 FUNCTION(void,          _CIpow,                     ());
-FUNCTION(void,          __libm_sse2_acosf,          ());
-FUNCTION(void,          __libm_sse2_cosf,           ());
-FUNCTION(void,          __libm_sse2_sinf,           ());
-FUNCTION(void,          __libm_sse2_sincosf_,       ());
-FUNCTION(void,          __libm_sse2_pow,            ());
-FUNCTION(void,          __libm_sse2_powf,           ());
-FUNCTION(FILE*,         __acrt_iob_func,            (a),                unsigned a);
-FUNCTION(int,           __stdio_common_vfprintf,    (a, b, c, d, e),    unsigned __int64 a, FILE* b, char const* c, _locale_t d, va_list e);
-FUNCTION(int,           __stdio_common_vsprintf,    (a, b, c, d, e, f), unsigned __int64 a, char* b, size_t c, char const* d, _locale_t e, va_list f);
-FUNCTION(int,           __stdio_common_vsscanf,     (a, b, c, d, e, f), unsigned __int64 a, char const* b, size_t c, char const* d, _locale_t e, va_list f);
+FUNCTION1(void,         __libm_sse2_acosf,          ());
+FUNCTION1(void,         __libm_sse2_cosf,           ());
+FUNCTION1(void,         __libm_sse2_sinf,           ());
+FUNCTION1(void,         __libm_sse2_sincosf_,       ());
+FUNCTION1(void,         __libm_sse2_pow,            ());
+FUNCTION1(void,         __libm_sse2_powf,           ());
+FUNCTION1(FILE*,        __acrt_iob_func,            (a),                unsigned a);
+FUNCTION1(int,          __stdio_common_vfprintf,    (a, b, c, d, e),    unsigned __int64 a, FILE* b, char const* c, _locale_t d, va_list e);
+FUNCTION1(int,          __stdio_common_vsprintf,    (a, b, c, d, e, f), unsigned __int64 a, char* b, size_t c, char const* d, _locale_t e, va_list f);
+FUNCTION1(int,          __stdio_common_vsscanf,     (a, b, c, d, e, f), unsigned __int64 a, char const* b, size_t c, char const* d, _locale_t e, va_list f);
 //------------------------------------------------------------------------------
 #if defined(_M_IX86)
 //------------------------------------------------------------------------------
