@@ -20,6 +20,7 @@
 
 #include "xxMSVCRT.h"
 
+#pragma warning(disable:4244)
 #pragma warning(disable:4645)
 #if defined(_M_IX86)
 #   pragma comment(lib, "int64")
@@ -34,24 +35,44 @@
 //==============================================================================
 void* operator new(size_t size)
 {
+#if defined(_M_AMD64)
+    return malloc(size);
+#else
     return _aligned_malloc(size, 16);
+#endif
 }
 void* operator new[](size_t size)
 {
+#if defined(_M_AMD64)
+    return malloc(size);
+#else
     return _aligned_malloc(size, 16);
+#endif
 }
 //------------------------------------------------------------------------------
 void operator delete(void* ptr, size_t size)
 {
+#if defined(_M_AMD64)
+    free(ptr);
+#else
     _aligned_free(ptr);
+#endif
 }
 void operator delete[](void* ptr)
 {
+#if defined(_M_AMD64)
+    free(ptr);
+#else
     _aligned_free(ptr);
+#endif
 }
 void operator delete[](void* ptr, size_t size)
 {
+#if defined(_M_AMD64)
+    free(ptr);
+#else
     _aligned_free(ptr);
+#endif
 }
 //==============================================================================
 //  MSVCRT
@@ -280,7 +301,7 @@ static void aligned_free(void* ptr)
     free((char*)nullptr + unalignedPtr);
 }
 //------------------------------------------------------------------------------
-static void* getFunction(const char* name)
+static void* getFunction(const char* name, bool assert = true)
 {
     if (name == nullptr)
         return nullptr;
@@ -301,14 +322,8 @@ static void* getFunction(const char* name)
     if (function)
         return function;
 
-#if defined(_M_IX86)
-    if (name == "_aligned_malloc")
-        return aligned_malloc;
-    if (name == "_aligned_realloc")
-        return aligned_realloc;
-    if (name == "_aligned_free")
-        return aligned_free;
-#endif
+    if (assert == false)
+        return nullptr;
 
     static HMODULE user32 = nullptr;
     if (user32 == nullptr)
@@ -334,6 +349,33 @@ static void* getFunction__acrt_iob_func()
         return acrt_iob_func;
 
     return nullptr;
+}
+//------------------------------------------------------------------------------
+static void* getFunction_aligned_malloc()
+{
+    void* function = getFunction("_aligned_malloc", false);
+    if (function)
+        return function;
+
+    return aligned_malloc;
+}
+//------------------------------------------------------------------------------
+static void* getFunction_aligned_realloc()
+{
+    void* function = getFunction("_aligned_realloc", false);
+    if (function)
+        return function;
+
+    return aligned_realloc;
+}
+//------------------------------------------------------------------------------
+static void* getFunction_aligned_free()
+{
+    void* function = getFunction("_aligned_free", false);
+    if (function)
+        return function;
+
+    return aligned_free;
 }
 //------------------------------------------------------------------------------
 static void* getFunction__libm_sse2_sinf()
@@ -542,9 +584,9 @@ FUNCTION(void*,         calloc,                     (a, b),             size_t a
 FUNCTION(void*,         malloc,                     (a),                size_t a);
 FUNCTION(void*,         realloc,                    (a, b),             void* a, size_t b);
 FUNCTION(void,          free,                       (a),                void* a);
-FUNCTION(void*,         _aligned_malloc,            (a, b),             size_t a, size_t b);
-FUNCTION(void*,         _aligned_realloc,           (a, b, c),          void* a, size_t b, size_t c);
-FUNCTION(void,          _aligned_free,              (a),                void* a);
+FUNCTION1(void*,        _aligned_malloc,            (a, b),             size_t a, size_t b);
+FUNCTION1(void*,        _aligned_realloc,           (a, b, c),          void* a, size_t b, size_t c);
+FUNCTION1(void,         _aligned_free,              (a),                void* a);
 FUNCTION(int,           fclose,                     (a),                FILE* a);
 FUNCTION(int,           fflush,                     (a),                FILE* a);
 FUNCTION(FILE*,         fopen,                      (a, b),             char const* a, char const* b);
