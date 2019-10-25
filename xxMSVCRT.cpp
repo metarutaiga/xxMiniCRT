@@ -5,7 +5,10 @@
 // https://github.com/metarutaiga/xxMiniCRT
 //==============================================================================
 #ifndef _INC_SETJMPEX
-#define _INC_SETJMPEX
+#   define _INC_SETJMPEX
+#endif
+#ifndef _HAS_EXCEPTIONS
+#   define _HAS_EXCEPTIONS 0
 #endif
 #include <float.h>
 #include <setjmp.h>
@@ -15,6 +18,7 @@
 #include <limits.h>
 #include <malloc.h>
 #include <math.h>
+#include <exception>
 
 #if !defined(_DEBUG) && !defined(__llvm__)
 
@@ -73,6 +77,24 @@ void operator delete[](void* ptr, size_t size)
 #else
     _aligned_free(ptr);
 #endif
+}
+//------------------------------------------------------------------------------
+_STD_BEGIN
+_Prhand _Raise_handler;
+void _Xlength_error(const char*)
+{
+    __debugbreak();
+}
+_STD_END
+//------------------------------------------------------------------------------
+extern "C" void _invalid_parameter_noinfo_noreturn()
+{
+    __debugbreak();
+}
+//------------------------------------------------------------------------------
+extern "C" void _invoke_watson(wchar_t const* const expression, wchar_t const* const function_name, wchar_t const* const file_name, unsigned int const line_number, uintptr_t const reserved)
+{
+    __debugbreak();
 }
 //==============================================================================
 //  MSVCRT
