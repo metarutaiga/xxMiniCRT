@@ -625,10 +625,12 @@ FUNCTION(int,           memcmp,                     (a, b, c),          void con
 FUNCTION(void*,         memcpy,                     (a, b, c),          void* a, void const* b, size_t c);
 FUNCTION(void*,         memmove,                    (a, b, c),          void* a, void const* b, size_t c);
 FUNCTION(void*,         memset,                     (a, b, c),          void* a, int b, size_t c);
+FUNCTION(int,           remove,                     (a),                char const* a);
 FUNCTION(char*,         strcat,                     (a, b),             char* a, char const* b);
 FUNCTION(char const*,   strchr,                     (a, b),             char const* a, int b);
 FUNCTION(int,           strcmp,                     (a, b),             char const* a, char const* b);
 FUNCTION(char*,         strcpy,                     (a, b),             char* a, char const* b);
+FUNCTION(char*,         _strdup,                    (a),                char const* a);
 FUNCTION(size_t,        strlen,                     (a),                char const* a);
 FUNCTION(int,           strncmp,                    (a, b, c),          char const* a, char const* b, size_t c);
 FUNCTION(char*,         strncpy,                    (a, b, c),          char* a, char const* b, size_t c);
