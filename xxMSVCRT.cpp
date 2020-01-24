@@ -587,6 +587,7 @@ FUNCTION(int,           atexit,                     (a),                void (*a
 FUNCTION(double,        acos,                       (a),                double a);
 FUNCTION(double,        atan2,                      (a, b),             double a, double b);
 FUNCTION(double,        atof,                       (a),                char const* a);
+FUNCTION(int,           atoi,                       (a),                char const* a);
 FUNCTION(double,        ceil,                       (a),                double a);
 FUNCTION(double,        cos,                        (a),                double a);
 FUNCTION(double,        floor,                      (a),                double a);
@@ -611,6 +612,7 @@ FUNCTION1(void*,        _aligned_realloc,           (a, b, c),          void* a,
 FUNCTION1(void,         _aligned_free,              (a),                void* a);
 FUNCTION(int,           fclose,                     (a),                FILE* a);
 FUNCTION(int,           fflush,                     (a),                FILE* a);
+FUNCTION(char*,         fgets,                      (a, b, c),          char* a, int b, FILE* c);
 FUNCTION(FILE*,         fopen,                      (a, b),             char const* a, char const* b);
 FUNCTION(size_t,        fread,                      (a, b, c, d),       void* a, size_t b, size_t c, FILE* d);
 FUNCTION(int,           fseek,                      (a, b, c),          FILE* a, long b, int c);
@@ -636,6 +638,7 @@ FUNCTION(int,           strncmp,                    (a, b, c),          char con
 FUNCTION(char*,         strncpy,                    (a, b, c),          char* a, char const* b, size_t c);
 FUNCTION(char const*,   strrchr,                    (a, b),             char const* a, int b);
 FUNCTION(char const*,   strstr,                     (a, b),             char const* a, char const* b);
+FUNCTION(char*,         strtok,                     (a, b),             char* a, char const* b);
 FUNCTION(long,          strtol,                     (a, b, c),          char const* a, char** b, int c);
 FUNCTION(int,           toupper,                    (a),                int a);
 FUNCTION(FILE*,         _wfopen,                    (a, b),             wchar_t const* a, wchar_t const* b);
