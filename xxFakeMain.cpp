@@ -8,6 +8,8 @@
 #include <shellapi.h>
 #include <malloc.h>
 
+#if !defined(_DEBUG)
+
 extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID preserved);
 extern "C" void __getmainargs(int*, char***, char***, int, int*);
 extern "C" void __set_app_type(int);
@@ -31,3 +33,5 @@ extern "C" int mainCRTStartup()
     ExitProcess(result); 
     return result;
 }
+
+#endif
