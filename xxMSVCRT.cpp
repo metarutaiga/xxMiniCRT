@@ -179,77 +179,6 @@ static int stdio_common_vsscanf(unsigned __int64 options, char const* buffer, si
     return __vsscanf(buffer, format, argList);
 }
 //------------------------------------------------------------------------------
-#if defined(_M_AMD64)
-static float (*__sinf)(float);
-static float (*__cosf)(float);
-static float (*__acosf)(float);
-static float (*__atanf)(float);
-static float (*__powf)(float, float);
-static float (*__expf)(float);
-static float (*__logf)(float);
-#endif
-static double (*__sin)(double);
-static double (*__cos)(double);
-static double (*__acos)(double);
-static double (*__atan)(double);
-static double (*__pow)(double, double);
-static double (*__exp)(double);
-static double (*__log)(double);
-//------------------------------------------------------------------------------
-#if defined(__llvm__)
-#   define LIBM_SSE2_ASSIGN(var, index) var[index]
-#else
-#   define LIBM_SSE2_ASSIGN(var, index) var.m128_f32[index]
-#endif
-//------------------------------------------------------------------------------
-#if defined(_M_AMD64)
-#   define LIBM_SSE2_FLOAT(name, parameter, ...) \
-static __m128 __vectorcall libm_sse2_ ## name ## f(__VA_ARGS__) \
-{ \
-    __m128 v; \
-    LIBM_SSE2_ASSIGN(v, 0) = __ ## name ## f parameter; \
-    return v; \
-}
-#else
-#   define LIBM_SSE2_FLOAT(name, parameter, ...) \
-static __m128 __vectorcall libm_sse2_ ## name ## f(__VA_ARGS__) \
-{ \
-    __m128 v; \
-    LIBM_SSE2_ASSIGN(v, 0) = __ ## name parameter; \
-    return v; \
-}
-#endif
-//------------------------------------------------------------------------------
-LIBM_SSE2_FLOAT(sin, (a), float a);
-LIBM_SSE2_FLOAT(cos, (a), float a);
-static __m128 __vectorcall libm_sse2_sincosf(float f)
-{
-    __m128 v;
-#   if defined(_M_AMD64)
-    LIBM_SSE2_ASSIGN(v, 0) = __sinf(f);
-    LIBM_SSE2_ASSIGN(v, 1) = __cosf(f);
-#   else
-    LIBM_SSE2_ASSIGN(v, 0) = __sin(f);
-    LIBM_SSE2_ASSIGN(v, 1) = __cos(f);
-#   endif
-    return v;
-}
-LIBM_SSE2_FLOAT(acos, (a), float a);
-LIBM_SSE2_FLOAT(atan, (a), float a);
-LIBM_SSE2_FLOAT(pow, (a, b), float a, float b);
-LIBM_SSE2_FLOAT(exp, (a), float a);
-LIBM_SSE2_FLOAT(log, (a), float a);
-static __m128d __vectorcall libm_sse2_pow(double a, double b)
-{
-    __m128d v;
-#if defined(__llvm__)
-    v[0] = __pow(a, b);
-#else
-    v.m128d_f64[0] = __pow(a, b);
-#endif
-    return v;
-}
-//------------------------------------------------------------------------------
 static void* aligned_malloc(size_t size, size_t alignment)
 {
     size_t unalignedPtr = reinterpret_cast<size_t>(malloc(size + alignment));
@@ -289,7 +218,7 @@ static void aligned_free(void* ptr)
     free((char*)nullptr + unalignedPtr);
 }
 //------------------------------------------------------------------------------
-static void* getFunction(const char* name, bool assert = true)
+static void* getFunction(const char* name, const char* name2 = nullptr, bool assert = true)
 {
     if (name == nullptr)
         return nullptr;
@@ -306,7 +235,11 @@ static void* getFunction(const char* name, bool assert = true)
     if (msvcrt == nullptr)
         return nullptr;
 
-    void* function = GetProcAddress(msvcrt, name);
+    void* function = nullptr;
+    function = GetProcAddress(msvcrt, name);
+    if (function)
+        return function;
+    function = name2 ? GetProcAddress(msvcrt, name2) : nullptr;
     if (function)
         return function;
 
@@ -329,77 +262,83 @@ static void* getFunction(const char* name, bool assert = true)
     return nullptr;
 }
 //------------------------------------------------------------------------------
-static void* getFunction__acrt_iob_func()
-{
-    if (__iob == nullptr)
-        (void*&)__iob = getFunction("_iob");
-    if (__iob)
-        return acrt_iob_func;
-
-    return nullptr;
-}
-//------------------------------------------------------------------------------
-static void* getFunction_aligned_malloc()
-{
-    void* function = getFunction("_aligned_malloc", false);
-    if (function)
-        return function;
-
-    return aligned_malloc;
-}
-//------------------------------------------------------------------------------
-static void* getFunction_aligned_realloc()
-{
-    void* function = getFunction("_aligned_realloc", false);
-    if (function)
-        return function;
-
-    return aligned_realloc;
-}
-//------------------------------------------------------------------------------
-static void* getFunction_aligned_free()
-{
-    void* function = getFunction("_aligned_free", false);
-    if (function)
-        return function;
-
-    return aligned_free;
-}
-//------------------------------------------------------------------------------
-static void* getFunction__libm_sse2_sinf()
-{
 #if defined(_M_AMD64)
-    if (__sinf == nullptr)
-        (void*&)__sinf = getFunction("sinf");
-    if (__sinf)
-        return libm_sse2_sinf;
-#else
-    if (__sin == nullptr)
-        (void*&)__sin = getFunction("sin");
-    if (__sin)
-        return libm_sse2_sinf;
+static float (*__sinf)(float);
+static float (*__cosf)(float);
+static float (*__acosf)(float);
+static float (*__atanf)(float);
+static float (*__powf)(float, float);
+static float (*__expf)(float);
+static float (*__logf)(float);
 #endif
-
-    return nullptr;
-}
+static double (*__sin)(double);
+static double (*__cos)(double);
+static double (*__acos)(double);
+static double (*__atan)(double);
+static double (*__pow)(double, double);
+static double (*__exp)(double);
+static double (*__log)(double);
 //------------------------------------------------------------------------------
-static void* getFunction__libm_sse2_cosf()
-{
+#if defined(__llvm__)
+#   define LIBM_SSE2_ASSIGN(var, index) var[index]
+#else
+#   define LIBM_SSE2_ASSIGN(var, index) var.m128_f32[index]
+#endif
+//------------------------------------------------------------------------------
 #if defined(_M_AMD64)
-    if (__cosf == nullptr)
-        (void*&)__cosf = getFunction("cosf");
-    if (__cosf)
-        return libm_sse2_cosf;
-#else
-    if (__cos == nullptr)
-        (void*&)__cos = getFunction("cos");
-    if (__cos)
-        return libm_sse2_cosf;
-#endif
-
-    return nullptr;
+#   define LIBM_SSE2_FLOAT(name, parameter, ...) \
+static __m128 __vectorcall libm_sse2_ ## name ## f(__VA_ARGS__) \
+{ \
+    __m128 v; \
+    LIBM_SSE2_ASSIGN(v, 0) = __ ## name ## f parameter; \
+    return v; \
+} \
+static void* getFunction__ ## libm_sse2_ ## name ## f() \
+{ \
+    if (__ ## name ## f == nullptr) \
+        (void*&)__ ## name ## f = getFunction(#name ## "f"); \
+    if (__ ## name ## f) \
+        return libm_sse2_ ## name ## f; \
+    return nullptr; \
 }
+#else
+#   define LIBM_SSE2_FLOAT(name, parameter, ...) \
+static __m128 __vectorcall libm_sse2_ ## name ## f(__VA_ARGS__) \
+{ \
+    __m128 v; \
+    LIBM_SSE2_ASSIGN(v, 0) = __ ## name parameter; \
+    return v; \
+} \
+static void* getFunction__ ## libm_sse2_ ## name ## f() \
+{ \
+    if (__ ## name == nullptr) \
+        (void*&)__ ## name = getFunction(#name); \
+    if (__ ## name) \
+        return libm_sse2_ ## name ## f; \
+    return nullptr; \
+}
+#endif
 //------------------------------------------------------------------------------
+LIBM_SSE2_FLOAT(sin,    (a),    float a);
+LIBM_SSE2_FLOAT(cos,    (a),    float a);
+LIBM_SSE2_FLOAT(acos,   (a),    float a);
+LIBM_SSE2_FLOAT(atan,   (a),    float a);
+LIBM_SSE2_FLOAT(pow,    (a, b), float a, float b);
+LIBM_SSE2_FLOAT(exp,    (a),    float a);
+LIBM_SSE2_FLOAT(log,    (a),    float a);
+//------------------------------------------------------------------------------
+static __m128 __vectorcall libm_sse2_sincosf(float f)
+{
+    __m128 v;
+#   if defined(_M_AMD64)
+    LIBM_SSE2_ASSIGN(v, 0) = __sinf(f);
+    LIBM_SSE2_ASSIGN(v, 1) = __cosf(f);
+#   else
+    LIBM_SSE2_ASSIGN(v, 0) = __sin(f);
+    LIBM_SSE2_ASSIGN(v, 1) = __cos(f);
+#   endif
+    return v;
+}
 static void* getFunction__libm_sse2_sincosf_()
 {
 #if defined(_M_AMD64)
@@ -421,40 +360,16 @@ static void* getFunction__libm_sse2_sincosf_()
     return nullptr;
 }
 //------------------------------------------------------------------------------
-static void* getFunction__libm_sse2_acosf()
+static __m128d __vectorcall libm_sse2_pow(double a, double b)
 {
-#if defined(_M_AMD64)
-    if (__acosf == nullptr)
-        (void*&)__acosf = getFunction("acosf");
-    if (__acosf)
-        return libm_sse2_acosf;
+    __m128d v;
+#if defined(__llvm__)
+    v[0] = __pow(a, b);
 #else
-    if (__acos == nullptr)
-        (void*&)__acos = getFunction("acos");
-    if (__acos)
-        return libm_sse2_acosf;
+    v.m128d_f64[0] = __pow(a, b);
 #endif
-
-    return nullptr;
+    return v;
 }
-//------------------------------------------------------------------------------
-static void* getFunction__libm_sse2_atanf()
-{
-#if defined(_M_AMD64)
-    if (__atanf == nullptr)
-        (void*&)__atanf = getFunction("atanf");
-    if (__atanf)
-        return libm_sse2_atanf;
-#else
-    if (__atan == nullptr)
-        (void*&)__atan = getFunction("atan");
-    if (__atan)
-        return libm_sse2_atanf;
-#endif
-
-    return nullptr;
-}
-//------------------------------------------------------------------------------
 static void* getFunction__libm_sse2_pow()
 {
     if (__pow == nullptr)
@@ -465,55 +380,41 @@ static void* getFunction__libm_sse2_pow()
     return nullptr;
 }
 //------------------------------------------------------------------------------
-static void* getFunction__libm_sse2_powf()
+static void* getFunction__acrt_iob_func()
 {
-#if defined(_M_AMD64)
-    if (__powf == nullptr)
-        (void*&)__powf = getFunction("powf");
-    if (__powf)
-        return libm_sse2_powf;
-#else
-    if (__pow == nullptr)
-        (void*&)__pow = getFunction("pow");
-    if (__pow)
-        return libm_sse2_powf;
-#endif
+    if (__iob == nullptr)
+        (void*&)__iob = getFunction("_iob");
+    if (__iob)
+        return acrt_iob_func;
 
     return nullptr;
 }
 //------------------------------------------------------------------------------
-static void* getFunction__libm_sse2_expf()
+static void* getFunction_aligned_malloc()
 {
-#if defined(_M_AMD64)
-    if (__expf == nullptr)
-        (void*&)__expf = getFunction("expf");
-    if (__expf)
-        return libm_sse2_expf;
-#else
-    if (__exp == nullptr)
-        (void*&)__exp = getFunction("exp");
-    if (__exp)
-        return libm_sse2_expf;
-#endif
+    void* function = getFunction("_aligned_malloc", nullptr, false);
+    if (function)
+        return function;
 
-    return nullptr;
+    return aligned_malloc;
 }
 //------------------------------------------------------------------------------
-static void* getFunction__libm_sse2_logf()
+static void* getFunction_aligned_realloc()
 {
-#if defined(_M_AMD64)
-    if (__logf == nullptr)
-        (void*&)__logf = getFunction("logf");
-    if (__logf)
-        return libm_sse2_logf;
-#else
-    if (__log == nullptr)
-        (void*&)__log = getFunction("log");
-    if (__log)
-        return libm_sse2_logf;
-#endif
+    void* function = getFunction("_aligned_realloc", nullptr, false);
+    if (function)
+        return function;
 
-    return nullptr;
+    return aligned_realloc;
+}
+//------------------------------------------------------------------------------
+static void* getFunction_aligned_free()
+{
+    void* function = getFunction("_aligned_free", nullptr, false);
+    if (function)
+        return function;
+
+    return aligned_free;
 }
 //------------------------------------------------------------------------------
 static void* getFunctionsetjmp()
@@ -563,7 +464,20 @@ extern "C" result function(__VA_ARGS__) \
     return xx ## function parameter; \
 }
 //------------------------------------------------------------------------------
-#define FUNCTION1(result, function, parameter, ...) \
+#define FUNCTION1(result, function, function2, parameter, ...) \
+extern "C" result function(__VA_ARGS__) \
+{ \
+    static result (*xx ## function)(__VA_ARGS__); \
+    if (xx ## function == nullptr) \
+    { \
+        static const char* const xx ## function ## name = #function; \
+        static const char* const xx ## function2 ## name = #function2; \
+        (void*&)xx ## function = getFunction(xx ## function ## name, xx ## function2 ## name); \
+    } \
+    return xx ## function parameter; \
+}
+//------------------------------------------------------------------------------
+#define FUNCTIONX(result, function, parameter, ...) \
 extern "C" result function(__VA_ARGS__) \
 { \
     static result (*xx ## function)(__VA_ARGS__); \
@@ -655,9 +569,9 @@ FUNCTION(void*,         calloc,                     (a, b),             size_t a
 FUNCTION(void*,         malloc,                     (a),                size_t a);
 FUNCTION(void*,         realloc,                    (a, b),             void* a, size_t b);
 FUNCTION(void,          free,                       (a),                void* a);
-FUNCTION1(void*,        _aligned_malloc,            (a, b),             size_t a, size_t b);
-FUNCTION1(void*,        _aligned_realloc,           (a, b, c),          void* a, size_t b, size_t c);
-FUNCTION1(void,         _aligned_free,              (a),                void* a);
+FUNCTIONX(void*,        _aligned_malloc,            (a, b),             size_t a, size_t b);
+FUNCTIONX(void*,        _aligned_realloc,           (a, b, c),          void* a, size_t b, size_t c);
+FUNCTIONX(void,         _aligned_free,              (a),                void* a);
 FUNCTION(void,          clearerr,                   (a),                FILE* a);
 FUNCTION(int,           fclose,                     (a),                FILE* a);
 FUNCTION(int,           ferror,                     (a),                FILE* a);
@@ -672,7 +586,7 @@ FUNCTION(int,           getc,                       (a),                FILE* a)
 FUNCTION(char*,         getenv,                     (a),                char const* a);
 FUNCTION(void,          qsort,                      (a, b, c, d),       void* a, size_t b, size_t c, _CoreCrtNonSecureSearchSortCompareFunction d);
 FUNCTION(void,          longjmp,                    (a, b),             jmp_buf a, int b);
-FUNCTION1(int,          setjmp,                     (a),                jmp_buf a);
+FUNCTIONX(int,          setjmp,                     (a),                jmp_buf a);
 FUNCTION(void const*,   memchr,                     (a, b, c),          void const* a, int b, size_t c);
 FUNCTION(int,           memcmp,                     (a, b, c),          void const* a, void const* b, size_t c);
 FUNCTION(void*,         memcpy,                     (a, b, c),          void* a, void const* b, size_t c);
@@ -698,27 +612,27 @@ FUNCTION(char*,         strtok,                     (a, b),             char* a,
 FUNCTION(char*,         strtok_s,                   (a, b, c),          char* a, char const* b, char** c);
 FUNCTION(double,        strtod,                     (a, b),             char const* a, char** b);
 FUNCTION(long,          strtol,                     (a, b, c),          char const* a, char** b, int c);
-FUNCTION(long long,     strtoll,                    (a, b, c),          char const* a, char** b, int c);
-FUNCTION(unsigned long long, strtoull,              (a, b, c),          char const* a, char** b, int c);
+FUNCTION1(long long,          strtoll,  _strtoi64,  (a, b, c),          char const* a, char** b, int c);
+FUNCTION1(unsigned long long, strtoull, _strtoui64, (a, b, c),          char const* a, char** b, int c);
 FUNCTION(int,           toupper,                    (a),                int a);
 FUNCTION(size_t,        wcstombs,                   (a, b, c),          char* a, const wchar_t* b, size_t c);
 FUNCTION(FILE*,         _wfopen,                    (a, b),             wchar_t const* a, wchar_t const* b);
 FUNCTION(void,          _CIfmod,                    ());
 FUNCTION(void,          _CIacos,                    ());
 FUNCTION(void,          _CIpow,                     ());
-FUNCTION1(void,         __libm_sse2_acosf,          ());
-FUNCTION1(void,         __libm_sse2_atanf,          ());
-FUNCTION1(void,         __libm_sse2_cosf,           ());
-FUNCTION1(void,         __libm_sse2_sinf,           ());
-FUNCTION1(void,         __libm_sse2_sincosf_,       ());
-FUNCTION1(void,         __libm_sse2_pow,            ());
-FUNCTION1(void,         __libm_sse2_powf,           ());
-FUNCTION1(void,         __libm_sse2_expf,           ());
-FUNCTION1(void,         __libm_sse2_logf,           ());
-FUNCTION1(FILE*,        __acrt_iob_func,            (a),                unsigned a);
-FUNCTION1(int,          __stdio_common_vfprintf,    (a, b, c, d, e),    unsigned __int64 a, FILE* b, char const* c, _locale_t d, va_list e);
-FUNCTION1(int,          __stdio_common_vsprintf,    (a, b, c, d, e, f), unsigned __int64 a, char* b, size_t c, char const* d, _locale_t e, va_list f);
-FUNCTION1(int,          __stdio_common_vsscanf,     (a, b, c, d, e, f), unsigned __int64 a, char const* b, size_t c, char const* d, _locale_t e, va_list f);
+FUNCTIONX(void,         __libm_sse2_acosf,          ());
+FUNCTIONX(void,         __libm_sse2_atanf,          ());
+FUNCTIONX(void,         __libm_sse2_cosf,           ());
+FUNCTIONX(void,         __libm_sse2_sinf,           ());
+FUNCTIONX(void,         __libm_sse2_sincosf_,       ());
+FUNCTIONX(void,         __libm_sse2_pow,            ());
+FUNCTIONX(void,         __libm_sse2_powf,           ());
+FUNCTIONX(void,         __libm_sse2_expf,           ());
+FUNCTIONX(void,         __libm_sse2_logf,           ());
+FUNCTIONX(FILE*,        __acrt_iob_func,            (a),                unsigned a);
+FUNCTIONX(int,          __stdio_common_vfprintf,    (a, b, c, d, e),    unsigned __int64 a, FILE* b, char const* c, _locale_t d, va_list e);
+FUNCTIONX(int,          __stdio_common_vsprintf,    (a, b, c, d, e, f), unsigned __int64 a, char* b, size_t c, char const* d, _locale_t e, va_list f);
+FUNCTIONX(int,          __stdio_common_vsscanf,     (a, b, c, d, e, f), unsigned __int64 a, char const* b, size_t c, char const* d, _locale_t e, va_list f);
 //------------------------------------------------------------------------------
 #if defined(_M_IX86)
 //------------------------------------------------------------------------------
@@ -726,16 +640,6 @@ extern "C" static const double TrickDouble = { 6755399441055744.0 };
 extern "C" static const double _TrickDouble = { 6755399441055744.0 };
 extern "C" static const double Int32ToUInt32[] = { 0.0, 4294967296.0 }; 
 extern "C" static const double _Int32ToUInt32[] = { 0.0, 4294967296.0 };
-//------------------------------------------------------------------------------
-extern "C" __declspec(naked) void _chkstk()
-{
-    __asm neg       eax
-    __asm add       eax, esp
-    __asm xchg      eax, esp
-    __asm mov       eax, [eax]
-    __asm mov       [esp], eax
-    __asm ret
-}
 //------------------------------------------------------------------------------
 extern "C" __declspec(naked) long long _ftol2(float f)
 {
@@ -875,7 +779,8 @@ extern "C" __declspec(naked) double _ultod3(unsigned long long l)
     __asm ret
 }
 //------------------------------------------------------------------------------
-extern "C" __declspec(naked) void _alloca_probe_16()
+extern "C" void* _chkstk();
+extern "C" __declspec(naked) void* _alloca_probe_16()
 {
     __asm push      eax
     __asm lea       eax, [esp + 8]
@@ -884,10 +789,6 @@ extern "C" __declspec(naked) void _alloca_probe_16()
     __asm add       eax, [esp]
     __asm add       esp, 4
     __asm jmp       _chkstk
-}
-#elif defined(_M_AMD64)
-extern "C" void __chkstk()
-{
 }
 #endif
 
