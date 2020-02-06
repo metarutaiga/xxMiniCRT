@@ -183,6 +183,7 @@ static int stdio_common_vsscanf(unsigned __int64 options, char const* buffer, si
 static float (*__sinf)(float);
 static float (*__cosf)(float);
 static float (*__acosf)(float);
+static float (*__atanf)(float);
 static float (*__powf)(float, float);
 static float (*__expf)(float);
 static float (*__logf)(float);
@@ -190,146 +191,61 @@ static float (*__logf)(float);
 static double (*__sin)(double);
 static double (*__cos)(double);
 static double (*__acos)(double);
+static double (*__atan)(double);
 static double (*__pow)(double, double);
 static double (*__exp)(double);
 static double (*__log)(double);
-static __m128 __vectorcall libm_sse2_sinf(float f)
-{
-    __m128 v;
+//------------------------------------------------------------------------------
 #if defined(__llvm__)
-#   if defined(_M_AMD64)
-    v[0] = __sinf(f);
-#   else
-    v[0] = __sin(f);
-#   endif
+#   define LIBM_SSE2_ASSIGN(var, index) var[index]
 #else
-#   if defined(_M_AMD64)
-    v.m128_f32[0] = __sinf(f);
-#   else
-    v.m128_f32[0] = __sin(f);
-#   endif
+#   define LIBM_SSE2_ASSIGN(var, index) var.m128_f32[index]
 #endif
-    return v;
+//------------------------------------------------------------------------------
+#if defined(_M_AMD64)
+#   define LIBM_SSE2_FLOAT(name, parameter, ...) \
+static __m128 __vectorcall libm_sse2_ ## name ## f(__VA_ARGS__) \
+{ \
+    __m128 v; \
+    LIBM_SSE2_ASSIGN(v, 0) = __ ## name ## f parameter; \
+    return v; \
 }
-static __m128 __vectorcall libm_sse2_cosf(float f)
-{
-    __m128 v;
-#if defined(__llvm__)
-#   if defined(_M_AMD64)
-    v[0] = __cosf(f);
-#   else
-    v[0] = __cos(f);
-#   endif
 #else
-#   if defined(_M_AMD64)
-    v.m128_f32[0] = __cosf(f);
-#   else
-    v.m128_f32[0] = __cos(f);
-#   endif
-#endif
-    return v;
+#   define LIBM_SSE2_FLOAT(name, parameter, ...) \
+static __m128 __vectorcall libm_sse2_ ## name ## f(__VA_ARGS__) \
+{ \
+    __m128 v; \
+    LIBM_SSE2_ASSIGN(v, 0) = __ ## name parameter; \
+    return v; \
 }
+#endif
+//------------------------------------------------------------------------------
+LIBM_SSE2_FLOAT(sin, (a), float a);
+LIBM_SSE2_FLOAT(cos, (a), float a);
 static __m128 __vectorcall libm_sse2_sincosf(float f)
 {
     __m128 v;
-#if defined(__llvm__)
 #   if defined(_M_AMD64)
-    v[0] = __sinf(f);
-    v[1] = __cosf(f);
+    LIBM_SSE2_ASSIGN(v, 0) = __sinf(f);
+    LIBM_SSE2_ASSIGN(v, 1) = __cosf(f);
 #   else
-    v[0] = __sin(f);
-    v[1] = __cos(f);
+    LIBM_SSE2_ASSIGN(v, 0) = __sin(f);
+    LIBM_SSE2_ASSIGN(v, 1) = __cos(f);
 #   endif
-#else
-#   if defined(_M_AMD64)
-    v.m128_f32[0] = __sinf(f);
-    v.m128_f32[1] = __cosf(f);
-#   else
-    v.m128_f32[0] = __sin(f);
-    v.m128_f32[1] = __cos(f);
-#   endif
-#endif
     return v;
 }
-static __m128 __vectorcall libm_sse2_acosf(float f)
-{
-    __m128 v;
-#if defined(__llvm__)
-#   if defined(_M_AMD64)
-    v[0] = __acosf(f);
-#   else
-    v[0] = __acos(f);
-#   endif
-#else
-#   if defined(_M_AMD64)
-    v.m128_f32[0] = __acosf(f);
-#   else
-    v.m128_f32[0] = __acos(f);
-#   endif
-#endif
-    return v;
-}
-static __m128d __vectorcall libm_sse2_pow(float a, double b)
+LIBM_SSE2_FLOAT(acos, (a), float a);
+LIBM_SSE2_FLOAT(atan, (a), float a);
+LIBM_SSE2_FLOAT(pow, (a, b), float a, float b);
+LIBM_SSE2_FLOAT(exp, (a), float a);
+LIBM_SSE2_FLOAT(log, (a), float a);
+static __m128d __vectorcall libm_sse2_pow(double a, double b)
 {
     __m128d v;
 #if defined(__llvm__)
     v[0] = __pow(a, b);
 #else
     v.m128d_f64[0] = __pow(a, b);
-#endif
-    return v;
-}
-static __m128 __vectorcall libm_sse2_powf(float a, float b)
-{
-    __m128 v;
-#if defined(__llvm__)
-#   if defined(_M_AMD64)
-    v[0] = __powf(a, b);
-#   else
-    v[0] = __pow(a, b);
-#   endif
-#else
-#   if defined(_M_AMD64)
-    v.m128_f32[0] = __powf(a, b);
-#   else
-    v.m128_f32[0] = __pow(a, b);
-#   endif
-#endif
-    return v;
-}
-static __m128 __vectorcall libm_sse2_expf(float f)
-{
-    __m128 v;
-#if defined(__llvm__)
-#   if defined(_M_AMD64)
-    v[0] = __expf(f);
-#   else
-    v[0] = __exp(f);
-#   endif
-#else
-#   if defined(_M_AMD64)
-    v.m128_f32[0] = __expf(f);
-#   else
-    v.m128_f32[0] = __exp(f);
-#   endif
-#endif
-    return v;
-}
-static __m128 __vectorcall libm_sse2_logf(float f)
-{
-    __m128 v;
-#if defined(__llvm__)
-#   if defined(_M_AMD64)
-    v[0] = __logf(f);
-#   else
-    v[0] = __log(f);
-#   endif
-#else
-#   if defined(_M_AMD64)
-    v.m128_f32[0] = __logf(f);
-#   else
-    v.m128_f32[0] = __log(f);
-#   endif
 #endif
     return v;
 }
@@ -522,6 +438,23 @@ static void* getFunction__libm_sse2_acosf()
     return nullptr;
 }
 //------------------------------------------------------------------------------
+static void* getFunction__libm_sse2_atanf()
+{
+#if defined(_M_AMD64)
+    if (__atanf == nullptr)
+        (void*&)__atanf = getFunction("atanf");
+    if (__atanf)
+        return libm_sse2_atanf;
+#else
+    if (__atan == nullptr)
+        (void*&)__atan = getFunction("atan");
+    if (__atan)
+        return libm_sse2_atanf;
+#endif
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
 static void* getFunction__libm_sse2_pow()
 {
     if (__pow == nullptr)
@@ -642,6 +575,7 @@ extern "C" result function(__VA_ARGS__) \
 }
 //------------------------------------------------------------------------------
 #pragma function(acos)
+#pragma function(atan)
 #pragma function(atan2)
 #pragma function(ceil)
 #pragma function(cos)
@@ -654,6 +588,7 @@ extern "C" result function(__VA_ARGS__) \
 #if defined(_M_AMD64)
 #pragma function(asinf)
 #pragma function(acosf)
+#pragma function(atanf)
 #pragma function(atan2f)
 #pragma function(sinf)
 #pragma function(cosf)
@@ -675,11 +610,13 @@ FUNCTION(void,          abort,                      (),                 void);
 FUNCTION(int,           atexit,                     (a),                void (*a)(void));
 FUNCTION(void,          exit,                       (a),                int a);
 FUNCTION(int,           isdigit,                    (a),                int a);
+FUNCTION(int,           isspace,                    (a),                int a);
 FUNCTION(int*,          _errno,                     (),                 void);
 FUNCTION(int,           _purecall,                  (),                 void);
 FUNCTION(void,          __getmainargs,              (a, b, c, d, e),    int* a, char*** b, char*** c, int d, int* e);
 FUNCTION(void,          __set_app_type,             (a),                int a);
 FUNCTION(double,        acos,                       (a),                double a);
+FUNCTION(double,        atan,                       (a),                double a);
 FUNCTION(double,        atan2,                      (a, b),             double a, double b);
 FUNCTION(double,        atof,                       (a),                char const* a);
 FUNCTION(int,           atoi,                       (a),                char const* a);
@@ -705,6 +642,7 @@ FUNCTION(short,         _fdclass,                   (a),                float a)
 #if defined(_M_AMD64)
 FUNCTION(float,         asinf,                      (a),                float a);
 FUNCTION(float,         acosf,                      (a),                float a);
+FUNCTION(float,         atanf,                      (a),                float a);
 FUNCTION(float,         atan2f,                     (a, b),             float a, float b);
 FUNCTION(float,         sinf,                       (a),                float a);
 FUNCTION(float,         cosf,                       (a),                float a);
@@ -769,6 +707,7 @@ FUNCTION(void,          _CIfmod,                    ());
 FUNCTION(void,          _CIacos,                    ());
 FUNCTION(void,          _CIpow,                     ());
 FUNCTION1(void,         __libm_sse2_acosf,          ());
+FUNCTION1(void,         __libm_sse2_atanf,          ());
 FUNCTION1(void,         __libm_sse2_cosf,           ());
 FUNCTION1(void,         __libm_sse2_sinf,           ());
 FUNCTION1(void,         __libm_sse2_sincosf_,       ());
