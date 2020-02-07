@@ -525,6 +525,7 @@ FUNCTION(int,           atexit,                     (a),                void (*a
 FUNCTION(void,          exit,                       (a),                int a);
 FUNCTION(int,           isdigit,                    (a),                int a);
 FUNCTION(int,           isspace,                    (a),                int a);
+FUNCTION(int,           system,                     (a),                const char* a);
 FUNCTION(int*,          _errno,                     (),                 void);
 FUNCTION(int,           _purecall,                  (),                 void);
 FUNCTION(void,          __getmainargs,              (a, b, c, d, e),    int* a, char*** b, char*** c, int d, int* e);
