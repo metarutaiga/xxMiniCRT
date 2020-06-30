@@ -270,6 +270,7 @@ static float (*__atanf)(float);
 static float (*__powf)(float, float);
 static float (*__expf)(float);
 static float (*__logf)(float);
+static float (*__log10f)(float);
 #endif
 static double (*__sin)(double);
 static double (*__cos)(double);
@@ -278,6 +279,7 @@ static double (*__atan)(double);
 static double (*__pow)(double, double);
 static double (*__exp)(double);
 static double (*__log)(double);
+static double (*__log10)(double);
 //------------------------------------------------------------------------------
 #if defined(__llvm__)
 #   define LIBM_SSE2_ASSIGN(var, index) var[index]
@@ -326,6 +328,7 @@ LIBM_SSE2_FLOAT(atan,   (a),    float a);
 LIBM_SSE2_FLOAT(pow,    (a, b), float a, float b);
 LIBM_SSE2_FLOAT(exp,    (a),    float a);
 LIBM_SSE2_FLOAT(log,    (a),    float a);
+LIBM_SSE2_FLOAT(log10,  (a),    float a);
 //------------------------------------------------------------------------------
 static __m128 __vectorcall libm_sse2_sincosf(float f)
 {
@@ -489,27 +492,33 @@ extern "C" result function(__VA_ARGS__) \
 }
 //------------------------------------------------------------------------------
 #pragma function(acos)
+#pragma function(asin)
 #pragma function(atan)
 #pragma function(atan2)
 #pragma function(ceil)
 #pragma function(cos)
 #pragma function(floor)
 #pragma function(fmod)
+#pragma function(log)
+#pragma function(log10)
 #pragma function(pow)
 #pragma function(sin)
+#pragma function(sqrt)
 #pragma function(_dclass)
 #pragma function(_fdclass)
 #if defined(_M_AMD64)
-#pragma function(asinf)
 #pragma function(acosf)
+#pragma function(asinf)
 #pragma function(atanf)
 #pragma function(atan2f)
-#pragma function(sinf)
 #pragma function(cosf)
 #pragma function(expf)
-#pragma function(logf)
-#pragma function(powf)
 #pragma function(fmodf)
+#pragma function(logf)
+#pragma function(log10f)
+#pragma function(powf)
+#pragma function(sinf)
+#pragma function(sqrtf)
 #endif
 #pragma function(memchr)
 #pragma function(memcmp)
@@ -531,6 +540,7 @@ FUNCTION(int,           _purecall,                  (),                 void);
 FUNCTION(void,          __getmainargs,              (a, b, c, d, e),    int* a, char*** b, char*** c, int d, int* e);
 FUNCTION(void,          __set_app_type,             (a),                int a);
 FUNCTION(double,        acos,                       (a),                double a);
+FUNCTION(double,        asin,                       (a),                double a);
 FUNCTION(double,        atan,                       (a),                double a);
 FUNCTION(double,        atan2,                      (a, b),             double a, double b);
 FUNCTION(double,        atof,                       (a),                char const* a);
@@ -544,27 +554,32 @@ FUNCTION(float,         exp2f,                      (a),                float a)
 FUNCTION(double,        floor,                      (a),                double a);
 FUNCTION(double,        fmod,                       (a, b),             double a, double b);
 FUNCTION(double,        ldexp,                      (a, b),             double a, int b);
+FUNCTION(double,        log,                        (a),                double a);
 FUNCTION(double,        log2,                       (a),                double a);
-FUNCTION(float,         log2f,                      (a),                float a);
+FUNCTION(double,        log10,                      (a),                double a);
 FUNCTION(double,        pow,                        (a, b),             double a, double b);
 FUNCTION(double,        rint,                       (a),                double a);
 FUNCTION(float,         rintf,                      (a),                float a);
 FUNCTION(double,        sin,                        (a),                double a);
+FUNCTION(double,        sqrt,                       (a),                double a);
 FUNCTION(double,        trunc,                      (a),                double a);
 FUNCTION(float,         truncf,                     (a),                float a);
 FUNCTION(short,         _dclass,                    (a),                double a);
 FUNCTION(short,         _fdclass,                   (a),                float a);
 #if defined(_M_AMD64)
-FUNCTION(float,         asinf,                      (a),                float a);
 FUNCTION(float,         acosf,                      (a),                float a);
+FUNCTION(float,         asinf,                      (a),                float a);
 FUNCTION(float,         atanf,                      (a),                float a);
 FUNCTION(float,         atan2f,                     (a, b),             float a, float b);
-FUNCTION(float,         sinf,                       (a),                float a);
 FUNCTION(float,         cosf,                       (a),                float a);
 FUNCTION(float,         expf,                       (a),                float a);
-FUNCTION(float,         logf,                       (a),                float a);
-FUNCTION(float,         powf,                       (a, b),             float a, float b);
 FUNCTION(float,         fmodf,                      (a, b),             float a, float b);
+FUNCTION(float,         logf,                       (a),                float a);
+FUNCTION(float,         log2f,                      (a),                float a);
+FUNCTION(float,         log10f,                     (a),                float a);
+FUNCTION(float,         powf,                       (a, b),             float a, float b);
+FUNCTION(float,         sinf,                       (a),                float a);
+FUNCTION(float ,        sqrtf,                      (a),                float a);
 #endif
 FUNCTION(void*,         calloc,                     (a, b),             size_t a, size_t b);
 FUNCTION(void*,         malloc,                     (a),                size_t a);
@@ -630,6 +645,7 @@ FUNCTIONX(void,         __libm_sse2_pow,            ());
 FUNCTIONX(void,         __libm_sse2_powf,           ());
 FUNCTIONX(void,         __libm_sse2_expf,           ());
 FUNCTIONX(void,         __libm_sse2_logf,           ());
+FUNCTIONX(void,         __libm_sse2_log10f,         ());
 FUNCTIONX(FILE*,        __acrt_iob_func,            (a),                unsigned a);
 FUNCTIONX(int,          __stdio_common_vfprintf,    (a, b, c, d, e),    unsigned __int64 a, FILE* b, char const* c, _locale_t d, va_list e);
 FUNCTIONX(int,          __stdio_common_vsprintf,    (a, b, c, d, e, f), unsigned __int64 a, char* b, size_t c, char const* d, _locale_t e, va_list f);
