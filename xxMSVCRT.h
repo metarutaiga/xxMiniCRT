@@ -6,7 +6,7 @@
 //==============================================================================
 #pragma once
 
-#if !defined(_DEBUG) && !defined(__llvm__)
+#if !defined(_DEBUG) && !defined(__llvm__) && (defined(_M_IX86) || defined(_M_AMD64))
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN

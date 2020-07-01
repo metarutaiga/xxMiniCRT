@@ -20,7 +20,7 @@
 #include <math.h>
 #include <exception>
 
-#if !defined(_DEBUG) && !defined(__llvm__)
+#if !defined(_DEBUG) && !defined(__llvm__) && (defined(_M_IX86) || defined(_M_AMD64))
 
 #include "xxMSVCRT.h"
 
