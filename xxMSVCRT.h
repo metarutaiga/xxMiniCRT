@@ -6,7 +6,7 @@
 //==============================================================================
 #pragma once
 
-#if !defined(_DEBUG) && !defined(__llvm__) && (defined(_M_IX86) || defined(_M_AMD64))
+#if !defined(_DEBUG) && !defined(__llvm__)
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -18,6 +18,12 @@ __pragma(comment(lib, "xxMiniCRT.Release.x86.lib"))
 #elif defined(_M_AMD64)
 #define IMPLEMENT_MINICRT_LIB() \
 __pragma(comment(lib, "xxMiniCRT.Release.x64.lib"))
+#elif defined(_M_ARM)
+#define IMPLEMENT_MINICRT_LIB() \
+__pragma(comment(lib, "xxMiniCRT.Release.ARM.lib"))
+#elif defined(_M_ARM64)
+#define IMPLEMENT_MINICRT_LIB() \
+__pragma(comment(lib, "xxMiniCRT.Release.ARM64.lib"))
 #endif
 
 extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID preserved);
