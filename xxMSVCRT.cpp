@@ -612,6 +612,7 @@ FUNCTION(long,          ftell,                      (a),                FILE* a)
 FUNCTION(size_t,        fwrite,                     (a, b, c, d),       void const* a, size_t b, size_t c, FILE* d);
 FUNCTION(int,           getc,                       (a),                FILE* a);
 FUNCTION(char*,         getenv,                     (a),                char const* a);
+FUNCTION(int,           isprint,                    (a),                int a);
 FUNCTION(void,          qsort,                      (a, b, c, d),       void* a, size_t b, size_t c, _CoreCrtNonSecureSearchSortCompareFunction d);
 FUNCTION(void,          longjmp,                    (a, b),             jmp_buf a, int b);
 FUNCTIONX(int,          setjmp,                     (a),                jmp_buf a);
@@ -620,6 +621,7 @@ FUNCTION(int,           memcmp,                     (a, b, c),          void con
 FUNCTION(void*,         memcpy,                     (a, b, c),          void* a, void const* b, size_t c);
 FUNCTION(void*,         memmove,                    (a, b, c),          void* a, void const* b, size_t c);
 FUNCTION(void*,         memset,                     (a, b, c),          void* a, int b, size_t c);
+FUNCTION(int,           putc,                       (a, b),             int a, FILE* b);
 FUNCTION(int,           rand,                       (),                 void);
 FUNCTION(int,           remove,                     (a),                char const* a);
 FUNCTION(char*,         strcat,                     (a, b),             char* a, char const* b);
@@ -628,7 +630,9 @@ FUNCTION(int,           strcmp,                     (a, b),             char con
 FUNCTION(char*,         strcpy,                     (a, b),             char* a, char const* b);
 FUNCTION(size_t,        strcspn,                    (a, b),             char const* a, char const* b);
 FUNCTION(char*,         _strdup,                    (a),                char const* a);
+FUNCTION(char*,         strerror,                   (a),                int a);
 FUNCTION(int,           _stricmp,                   (a, b),             char const* a, char const* b);
+FUNCTION(int,           _strnicmp,                  (a, b, c),          char const* a, char const* b, size_t c);
 FUNCTION(size_t,        strlen,                     (a),                char const* a);
 FUNCTION(int,           strncmp,                    (a, b, c),          char const* a, char const* b, size_t c);
 FUNCTION(char*,         strncpy,                    (a, b, c),          char* a, char const* b, size_t c);
