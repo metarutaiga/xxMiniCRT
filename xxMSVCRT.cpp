@@ -631,6 +631,7 @@ FUNCTION(char*,         strcpy,                     (a, b),             char* a,
 FUNCTION(size_t,        strcspn,                    (a, b),             char const* a, char const* b);
 FUNCTION(char*,         _strdup,                    (a),                char const* a);
 FUNCTION(char*,         strerror,                   (a),                int a);
+FUNCTION(size_t,        strftime,                   (a, b, c, d),       char* a, size_t b, char const* c, struct tm const* d);
 FUNCTION(int,           _stricmp,                   (a, b),             char const* a, char const* b);
 FUNCTION(int,           _strnicmp,                  (a, b, c),          char const* a, char const* b, size_t c);
 FUNCTION(size_t,        strlen,                     (a),                char const* a);
@@ -646,6 +647,8 @@ FUNCTION(double,        strtod,                     (a, b),             char con
 FUNCTION(long,          strtol,                     (a, b, c),          char const* a, char** b, int c);
 FUNCTION1(long long,          strtoll,  _strtoi64,  (a, b, c),          char const* a, char** b, int c);
 FUNCTION1(unsigned long long, strtoull, _strtoui64, (a, b, c),          char const* a, char** b, int c);
+FUNCTION(__time64_t,    _time64,                    (a),                __time64_t* a);
+FUNCTION(struct tm*,    _localtime64,               (a),                __time64_t const* a);
 FUNCTION(int,           toupper,                    (a),                int a);
 FUNCTION(size_t,        wcstombs,                   (a, b, c),          char* a, const wchar_t* b, size_t c);
 FUNCTION(FILE*,         _wfopen,                    (a, b),             wchar_t const* a, wchar_t const* b);
