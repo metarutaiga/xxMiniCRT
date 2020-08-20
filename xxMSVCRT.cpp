@@ -383,6 +383,26 @@ static void* getFunction__libm_sse2_pow()
 
     return nullptr;
 }
+//------------------------------------------------------------------------------
+static __m128d __vectorcall libm_sse2_log(double a)
+{
+    __m128d v;
+#if defined(__llvm__)
+    v[0] = __log(a, b);
+#else
+    v.m128d_f64[0] = __log(a);
+#endif
+    return v;
+}
+static void* getFunction__libm_sse2_log()
+{
+    if (__log == nullptr)
+        (void*&)__log = getFunction("log");
+    if (__log)
+        return libm_sse2_log;
+
+    return nullptr;
+}
 #endif
 //------------------------------------------------------------------------------
 static void* getFunction__acrt_iob_func()
@@ -664,6 +684,7 @@ FUNCTIONX(void,         __libm_sse2_sincosf_,       ());
 FUNCTIONX(void,         __libm_sse2_pow,            ());
 FUNCTIONX(void,         __libm_sse2_powf,           ());
 FUNCTIONX(void,         __libm_sse2_expf,           ());
+FUNCTIONX(void,         __libm_sse2_log,            ());
 FUNCTIONX(void,         __libm_sse2_logf,           ());
 FUNCTIONX(void,         __libm_sse2_log10f,         ());
 #endif
