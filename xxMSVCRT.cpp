@@ -54,6 +54,14 @@ void* operator new[](size_t size)
 #endif
 }
 //------------------------------------------------------------------------------
+void operator delete(void* ptr)
+{
+#if defined(_M_AMD64)
+    free(ptr);
+#else
+    _aligned_free(ptr);
+#endif
+}
 void operator delete(void* ptr, size_t size)
 {
 #if defined(_M_AMD64)
@@ -81,6 +89,10 @@ void operator delete[](void* ptr, size_t size)
 //------------------------------------------------------------------------------
 _STD_BEGIN
 _Prhand _Raise_handler;
+void _Xbad_alloc()
+{
+    __debugbreak();
+}
 void _Xlength_error(const char*)
 {
     __debugbreak();
