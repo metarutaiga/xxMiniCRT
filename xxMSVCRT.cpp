@@ -535,6 +535,7 @@ extern "C" result function(__VA_ARGS__) \
 #pragma function(atan2)
 #pragma function(ceil)
 #pragma function(cos)
+#pragma function(fabs)
 #pragma function(floor)
 #pragma function(fmod)
 #pragma function(log)
@@ -552,6 +553,7 @@ extern "C" result function(__VA_ARGS__) \
 #pragma function(ceilf)
 #pragma function(cosf)
 #pragma function(expf)
+#pragma function(fabsf)
 #pragma function(floorf)
 #pragma function(fmodf)
 #pragma function(logf)
@@ -593,6 +595,7 @@ FUNCTION(float,         copysignf,                  (a, b),             float a,
 FUNCTION(double,        cos,                        (a),                double a);
 FUNCTION(double,        exp2,                       (a),                double a);
 FUNCTION(float,         exp2f,                      (a),                float a);
+FUNCTION(double,        fabs,                       (a),                double a);
 FUNCTION(double,        floor,                      (a),                double a);
 FUNCTION(double,        fmod,                       (a, b),             double a, double b);
 FUNCTION(double,        ldexp,                      (a, b),             double a, int b);
@@ -616,6 +619,9 @@ FUNCTION(float,         atan2f,                     (a, b),             float a,
 FUNCTION(float,         ceilf,                      (a),                float a);
 FUNCTION(float,         cosf,                       (a),                float a);
 FUNCTION(float,         expf,                       (a),                float a);
+#if defined(_M_ARM) || defined(_M_ARM64)
+FUNCTION(float,         fabsf,                      (a),                float a);
+#endif
 FUNCTION(float,         floorf,                     (a),                float a);
 FUNCTION(float,         fmodf,                      (a, b),             float a, float b);
 FUNCTION(float,         logf,                       (a),                float a);
