@@ -37,7 +37,7 @@ extern "C" int wWinMainCRTStartup() \
 { \
     _DllMainCRTStartup(NULL, DLL_PROCESS_ATTACH, NULL); \
     int result = wWinMain(GetModuleHandle(NULL), NULL, L"", 0); \
-    ExitProcess(result); \
+    TerminateProcess(GetCurrentProcess(), result); \
     return result; \
 }
 #else
