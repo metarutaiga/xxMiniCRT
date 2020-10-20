@@ -662,6 +662,7 @@ FUNCTION(void*,         memset,                     (a, b, c),          void* a,
 FUNCTION(int,           putc,                       (a, b),             int a, FILE* b);
 FUNCTION(int,           rand,                       (),                 void);
 FUNCTION(int,           remove,                     (a),                char const* a);
+FUNCTION(char*,         setlocale,                  (a, b),             int a, const char* b);
 FUNCTION(char*,         strcat,                     (a, b),             char* a, char const* b);
 FUNCTION(char const*,   strchr,                     (a, b),             char const* a, int b);
 FUNCTION(int,           strcmp,                     (a, b),             char const* a, char const* b);
