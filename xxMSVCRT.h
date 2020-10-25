@@ -26,6 +26,7 @@ __pragma(comment(lib, "xxMiniCRT.Release.ARM.lib"))
 __pragma(comment(lib, "xxMiniCRT.Release.ARM64.lib"))
 #endif
 
+extern "C" IMAGE_DOS_HEADER __ImageBase;
 extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID preserved);
 #define IMPLEMENT_MINICRT() \
 IMPLEMENT_MINICRT_LIB() \
@@ -33,12 +34,15 @@ __pragma(comment(linker, "/nodefaultlib:libcmt.lib")) \
 __pragma(comment(linker, "/nodefaultlib:libcpmt.lib")) \
 __pragma(comment(linker, "/nodefaultlib:msvcrt.lib")) \
 __pragma(comment(linker, "/nodefaultlib:msvcprt.lib")) \
-extern "C" int wWinMainCRTStartup() \
+extern "C" void wWinMainCRTStartup() \
 { \
     _DllMainCRTStartup(NULL, DLL_PROCESS_ATTACH, NULL); \
-    int result = wWinMain(GetModuleHandle(NULL), NULL, L"", 0); \
+    STARTUPINFOW startupInfo; \
+    GetStartupInfoW(&startupInfo); \
+    int showWindowMode = startupInfo.dwFlags & STARTF_USESHOWWINDOW ? startupInfo.wShowWindow : SW_SHOWDEFAULT; \
+    int result = wWinMain((HINSTANCE)&__ImageBase, NULL, GetCommandLineW(), showWindowMode); \
+    _DllMainCRTStartup(NULL, DLL_PROCESS_DETACH, NULL); \
     TerminateProcess(GetCurrentProcess(), result); \
-    return result; \
 }
 #else
 #define IMPLEMENT_MINICRT()

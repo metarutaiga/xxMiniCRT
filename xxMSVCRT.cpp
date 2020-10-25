@@ -117,13 +117,20 @@ extern "C" const int _fltused = 1;
 #pragma section(".CRT$XCZ", long, read)
 #pragma section(".CRT$XIA", long, read)
 #pragma section(".CRT$XIZ", long, read)
+#pragma section(".CRT$XPA", long, read)
+#pragma section(".CRT$XPZ", long, read)
+#pragma section(".CRT$XTA", long, read)
+#pragma section(".CRT$XTZ", long, read)
 typedef void (*_PVFV)();
 extern "C" __declspec(allocate(".CRT$XCA")) const _PVFV __xc_a = 0;
 extern "C" __declspec(allocate(".CRT$XCZ")) const _PVFV __xc_z = 0;
 extern "C" __declspec(allocate(".CRT$XIA")) const _PVFV __xi_a = 0;
 extern "C" __declspec(allocate(".CRT$XIZ")) const _PVFV __xi_z = 0;
+extern "C" __declspec(allocate(".CRT$XPA")) const _PVFV __xp_a = 0;
+extern "C" __declspec(allocate(".CRT$XPZ")) const _PVFV __xp_z = 0;
+extern "C" __declspec(allocate(".CRT$XTA")) const _PVFV __xt_a = 0;
+extern "C" __declspec(allocate(".CRT$XTZ")) const _PVFV __xt_z = 0;
 #pragma comment(linker, "/merge:.CRT=.rdata")
-#pragma comment(linker, "/merge:.rdata=.text")
 //------------------------------------------------------------------------------
 static void _initterm(const _PVFV* ppfn, const _PVFV* end)
 {
@@ -146,6 +153,8 @@ extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID pr
         break;
 
     case DLL_PROCESS_DETACH:
+        _initterm(&__xp_a, &__xp_z);
+        _initterm(&__xt_a, &__xt_z);
         break;
 
     case DLL_THREAD_ATTACH:
@@ -157,7 +166,8 @@ extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE handle, DWORD reason, LPVOID pr
 //==============================================================================
 //  wrapper
 //==============================================================================
-struct _iobuf_old {
+struct _iobuf_old
+{
     char* _ptr;
     int   _cnt;
     char* _base;
