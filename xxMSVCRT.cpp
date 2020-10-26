@@ -724,8 +724,6 @@ FUNCTIONX(int,          __stdio_common_vsscanf,     (a, b, c, d, e, f), unsigned
 //------------------------------------------------------------------------------
 #if defined(_M_IX86)
 //------------------------------------------------------------------------------
-extern "C" static const double TrickDouble = { 6755399441055744.0 };
-extern "C" static const double _TrickDouble = { 6755399441055744.0 };
 extern "C" static const double Int32ToUInt32[] = { 0.0, 4294967296.0 }; 
 extern "C" static const double _Int32ToUInt32[] = { 0.0, 4294967296.0 };
 //------------------------------------------------------------------------------
@@ -811,13 +809,10 @@ extern "C" __declspec(naked) unsigned long long _ftoul3(float f)
 extern "C" __declspec(naked) long long _dtol3(double d)
 {
     __asm sub       esp, 8
-    __asm movsd     xmm1, _TrickDouble
-    __asm addsd     xmm0, xmm1
-    __asm psubq     xmm0, xmm1
-    __asm movq      qword ptr [esp], xmm0
-    __asm pop       eax
-    __asm pop       edx
-    __asm ret
+    __asm movsd     qword ptr[esp], xmm0
+    __asm fld       qword ptr[esp]
+    __asm add       esp, 8
+    __asm jmp       _ftol2
 }
 //------------------------------------------------------------------------------
 extern "C" __declspec(naked) unsigned int _dtoui3(double d)
@@ -834,12 +829,16 @@ extern "C" __declspec(naked) unsigned int _dtoui3(double d)
 extern "C" __declspec(naked) unsigned long long _dtoul3(double d)
 {
     __asm sub       esp, 8
-    __asm movsd     xmm1, _TrickDouble
-    __asm addsd     xmm0, xmm1
-    __asm pxor      xmm0, xmm1
-    __asm movq      qword ptr [esp], xmm0
-    __asm pop       eax
-    __asm pop       edx
+    __asm movsd     qword ptr[esp], xmm0
+    __asm fld       qword ptr[esp]
+    __asm add       esp, 8
+    __asm call      _ftol2
+    __asm test      edx, 080000000h
+    __asm jnz       _dtoul3_neg
+    __asm ret
+    __asm _dtoul3_neg:
+    __asm xor       eax, eax
+    __asm xor       edx, edx
     __asm ret
 }
 //------------------------------------------------------------------------------
