@@ -386,6 +386,43 @@ static void* getFunction__libm_sse2_sincosf_()
     return nullptr;
 }
 //------------------------------------------------------------------------------
+static __m128 __vectorcall libm_sse2_sincosf4(float x, float y)
+{
+    __m128 v;
+#   if defined(_M_AMD64)
+    LIBM_SSE2_ASSIGN(v, 0) = __sinf(x);
+    LIBM_SSE2_ASSIGN(v, 1) = __cosf(x);
+    LIBM_SSE2_ASSIGN(v, 2) = __sinf(y);
+    LIBM_SSE2_ASSIGN(v, 3) = __cosf(y);
+#   else
+    LIBM_SSE2_ASSIGN(v, 0) = __sin(x);
+    LIBM_SSE2_ASSIGN(v, 1) = __cos(x);
+    LIBM_SSE2_ASSIGN(v, 2) = __sin(y);
+    LIBM_SSE2_ASSIGN(v, 3) = __cos(y);
+#   endif
+    return v;
+}
+static void* getFunction__libm_sse2_sincosf4_()
+{
+#if defined(_M_AMD64)
+    if (__sinf == nullptr)
+        (void*&)__sinf = getFunction("sinf");
+    if (__cosf == nullptr)
+        (void*&)__cosf = getFunction("cosf");
+    if (__sinf && __cosf)
+        return libm_sse2_sincosf4;
+#else
+    if (__sin == nullptr)
+        (void*&)__sin = getFunction("sin");
+    if (__cos == nullptr)
+        (void*&)__cos = getFunction("cos");
+    if (__sin && __cos)
+        return libm_sse2_sincosf4;
+#endif
+
+    return nullptr;
+}
+//------------------------------------------------------------------------------
 static __m128d __vectorcall libm_sse2_pow(double a, double b)
 {
     __m128d v;
@@ -710,6 +747,7 @@ FUNCTIONX(void,         __libm_sse2_atanf,          ());
 FUNCTIONX(void,         __libm_sse2_cosf,           ());
 FUNCTIONX(void,         __libm_sse2_sinf,           ());
 FUNCTIONX(void,         __libm_sse2_sincosf_,       ());
+FUNCTIONX(void,         __libm_sse2_sincosf4_,      ());
 FUNCTIONX(void,         __libm_sse2_pow,            ());
 FUNCTIONX(void,         __libm_sse2_powf,           ());
 FUNCTIONX(void,         __libm_sse2_expf,           ());
