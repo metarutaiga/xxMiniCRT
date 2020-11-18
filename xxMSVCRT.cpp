@@ -113,6 +113,34 @@ extern "C" void _invoke_watson(wchar_t const* const expression, wchar_t const* c
 //==============================================================================
 extern "C" const int _fltused = 1;
 //------------------------------------------------------------------------------
+#pragma data_seg(".tls")
+#pragma data_seg(".tls$ZZZ")
+#pragma data_seg()
+#pragma section(".CRT$XLA", long, read)
+#pragma section(".CRT$XLZ", long, read)
+#pragma section(".rdata$T", long, read)
+extern "C" ULONG _tls_index = 0;
+extern "C" __declspec(allocate(".tls"))     char _tls_start = 0;
+extern "C" __declspec(allocate(".tls$ZZZ")) char _tls_end = 0;
+extern "C" __declspec(allocate(".CRT$XLA")) const PIMAGE_TLS_CALLBACK __xl_a = 0;
+extern "C" __declspec(allocate(".CRT$XLZ")) const PIMAGE_TLS_CALLBACK __xl_z = 0;
+extern "C" __declspec(allocate(".rdata$T")) const IMAGE_TLS_DIRECTORY _tls_used =
+{
+#if defined(_WIN64)
+    (ULONGLONG) &_tls_start,
+    (ULONGLONG) &_tls_end,
+    (ULONGLONG) &_tls_index,
+    (ULONGLONG)(&__xl_a + 1),
+#else
+    (ULONG_PTR) &_tls_start,
+    (ULONG_PTR) &_tls_end,
+    (ULONG_PTR) &_tls_index,
+    (ULONG_PTR)(&__xl_a + 1),
+#endif
+    (ULONG)0,
+    (ULONG)0,
+};
+//------------------------------------------------------------------------------
 #pragma section(".CRT$XCA", long, read)
 #pragma section(".CRT$XCZ", long, read)
 #pragma section(".CRT$XIA", long, read)
