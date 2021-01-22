@@ -97,6 +97,10 @@ void _Xlength_error(const char*)
 {
     __debugbreak();
 }
+void _Xout_of_range(char const*)
+{
+    __debugbreak();
+}
 _STD_END
 //------------------------------------------------------------------------------
 extern "C" void _invalid_parameter_noinfo_noreturn()
